@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
+using System.Linq;
 
 namespace XamUBot
 {
 	[BotAuthentication]
+	[RoutePrefix("api/messages")]
 	public class MessagesController : ApiController
 	{
 		// Information below is stored in web.config.
@@ -23,47 +25,32 @@ namespace XamUBot
 		/// POST: api/Messages
 		/// Receive a message from a user and reply to it
 		/// </summary>
-		public async Task<HttpResponseMessage> Post([FromBody]Activity activity)
+		[HttpPost]
+		[Route("")]
+		public async Task<IHttpActionResult> HandleIncomingActivity([FromBody]Activity activity)
 		{
-			if (activity.Type == ActivityTypes.Message)
+			if(activity == null)
 			{
-				await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
-			}
-			else
-			{
-				HandleSystemMessage(activity);
-			}
-			var response = Request.CreateResponse(HttpStatusCode.OK);
-			return response;
-		}
-
-		private Activity HandleSystemMessage(Activity message)
-		{
-			if (message.Type == ActivityTypes.DeleteUserData)
-			{
-				// Implement user deletion here
-				// If we handle user deletion, return a real message
-			}
-			else if (message.Type == ActivityTypes.ConversationUpdate)
-			{
-				// Handle conversation state changes, like members being added and removed
-				// Use Activity.MembersAdded and Activity.MembersRemoved and Activity.Action for info
-				// Not available in all channels
-			}
-			else if (message.Type == ActivityTypes.ContactRelationUpdate)
-			{
-				// Handle add/remove from contact lists
-				// Activity.From + Activity.Action represent what happened
-			}
-			else if (message.Type == ActivityTypes.Typing)
-			{
-				// Handle knowing tha the user is typing
-			}
-			else if (message.Type == ActivityTypes.Ping)
-			{
+				return BadRequest("No activity provided.");
 			}
 
-			return null;
+
+			if(activity.Type == ActivityTypes.ConversationUpdate)
+			{
+				IConversationUpdateActivity update = activity;
+				
+				// Remove bot from the members added
+				update.MembersAdded = update.MembersAdded.Where(member => member.Id != update.Recipient.Id).ToList();
+
+				if (update.MembersAdded.Count == 0)
+				{
+					return Ok();
+				}
+			}
+
+			await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+
+			return Ok();
 		}
 	}
 }
