@@ -34,7 +34,7 @@ namespace XamUBot.Dialogs
 				name = userNameEntity.Entity;
 			}
 			
-			await context.PostAsync($"Nice to meet you, {name}!");
+			await context.PostAsync($"Nice to meet you, **{name}**!");
 			context.Wait(MessageReceived);
 		}
 

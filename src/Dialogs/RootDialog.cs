@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace XamUBot.Dialogs
 {
@@ -33,6 +34,11 @@ namespace XamUBot.Dialogs
 			{
 				context.Call(new TestLuisDialog(), OnAfterLuisDialog);
 			}
+			else if(topic.ToLowerInvariant().Contains("cards"))
+			{
+				context.Call(new TestCardsDialog(), OnAfterCardsDialog);
+				
+			}
 			else
 			{
 				await context.PostAsync($"Unfortunately I cannot help you with that.");
@@ -43,12 +49,12 @@ namespace XamUBot.Dialogs
 
 		void ShowTopics(IDialogContext context)
 		{
-			PromptDialog.Choice(context, OnAfterPickTopic, new[] { "Team", "Tracks", "Test LUIS" }, "What would you like to know?");
+			PromptDialog.Choice(context, OnAfterPickTopic, new[] { "Team", "Tracks", "Test LUIS", "Cards" }, "What would you like to know?");
 		}
 
 		private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
 		{
-			var activity = await result;
+			var activity = await result as Activity;
 
 			switch (activity.Type)
 			{
@@ -59,8 +65,11 @@ namespace XamUBot.Dialogs
 				case ActivityTypes.Message:
 					int length = (activity.Text ?? string.Empty).Length;
 
-					await context.PostAsync($"You sent {activity.Text} which was {length} characters");
+					await context.PostAsync($"You sent **{activity.Text}** which was {length} characters");
+					
 					context.Wait(MessageReceivedAsync);
+
+					
 					break;
 
 				default:
@@ -72,6 +81,13 @@ namespace XamUBot.Dialogs
 		}
 
 		private Task OnAfterTracksDialog(IDialogContext context, IAwaitable<object> result)
+		{
+			context.Wait(MessageReceivedAsync);
+
+			return Task.CompletedTask;
+		}
+
+		private Task OnAfterCardsDialog(IDialogContext context, IAwaitable<object> result)
 		{
 			context.Wait(MessageReceivedAsync);
 
