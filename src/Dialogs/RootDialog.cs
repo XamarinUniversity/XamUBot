@@ -49,10 +49,10 @@ namespace XamUBot.Dialogs
 
 		void ShowTopics(IDialogContext context)
 		{
-			PromptDialog.Choice(context, OnAfterPickTopic, new[] { "Team", "Tracks", "Test LUIS", "Cards" }, "What would you like to know?");
+			PromptDialog.Choice(context, OnAfterPickTopic, new[] { "Team", "Tracks", "Test LUIS", "Cards" }, "What would you like to know? Note: you can always say 'panic' if you are lost.");
 		}
 
-		private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
+		private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
 		{
 			var activity = await result as Activity;
 
