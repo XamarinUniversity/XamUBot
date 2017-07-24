@@ -79,10 +79,24 @@ namespace XamUBot.Dialogs
 
 			await context.PostAsync(reply);
 
-			await context.PostAsync("Is there anything else you would like to know about the team?");
+			//await context.PostAsync("Is there anything else you would like to know about the team?");
 
-			// Wait for next message.
-			return true;
+			SendPicker(context, 1, "Is there anything else you would like to know about the team?");
+
+			return false;
+		}
+
+		protected override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
+		{
+			if(selectedChoice == BaseDialog.ChoiceNo)
+			{
+				context.Done("Returning from team");
+				return Task.FromResult(false);
+			}
+			else
+			{
+				return Task.FromResult(true);
+			}
 		}
 	}
 }

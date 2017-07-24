@@ -23,6 +23,10 @@ namespace XamUBot.Dialogs
 		/// </summary>
 		public const string ChoiceNo = "no";
 
+
+		int _pendingDialogId;
+		int _pendingPickerId;
+
 		public async Task StartAsync(IDialogContext context)
 		{
 			await OnInitializeAsync(context);
@@ -72,11 +76,9 @@ namespace XamUBot.Dialogs
 		/// <param name="buttons"></param>
 		protected void ShowPicker(IDialogContext context, int pickerId, string title, params string[] buttons)
 		{
-			_pickerId = pickerId;
+			_pendingPickerId = pickerId;
 			PromptDialog.Choice(context, OnInnerPickerSelectedAsync, buttons, title);
 		}
-
-		int _pickerId;
 
 		/// <summary>
 		/// Sends a yes/no picker to the client. Override OnChoiceMadeAsync to react to the result of the picker.
@@ -86,7 +88,7 @@ namespace XamUBot.Dialogs
 		/// <param name="buttons"></param>
 		protected void SendPicker(IDialogContext context, int pickerId, string title)
 		{
-			_pickerId = pickerId;
+			_pendingPickerId = pickerId;
 			PromptDialog.Confirm(context, OnInnerPickerSelectedAsync, title);
 		}
 
@@ -99,7 +101,7 @@ namespace XamUBot.Dialogs
 		async Task OnInnerPickerSelectedAsync(IDialogContext context, IAwaitable<object> result)
 		{
 			var selectedItem = await result;
-			await OnPickerSelectedAsync(context, _pickerId, selectedItem as string);
+			await OnPickerSelectedAsync(context, _pendingPickerId, selectedItem as string);
 		}
 
 		/// <summary>
@@ -111,7 +113,7 @@ namespace XamUBot.Dialogs
 		async Task OnInnerPickerSelectedAsync(IDialogContext context, IAwaitable<bool> result)
 		{
 			var selectedItem = await result;
-			bool waitForNextMessage = await OnPickerSelectedAsync(context, _pickerId, selectedItem ? BaseDialog.ChoiceYes : BaseDialog.ChoiceNo);
+			bool waitForNextMessage = await OnPickerSelectedAsync(context, _pendingPickerId, selectedItem ? ChoiceYes : ChoiceNo);
 			if (waitForNextMessage)
 			{
 				context.Wait(OnInnerMessageReceivedAsync);
@@ -129,5 +131,46 @@ namespace XamUBot.Dialogs
 			// Does nothing in base.
 			return Task.FromResult(true);
 		}
+
+		/// <summary>
+		/// Navigates to a different dialog. Optional return values can be picked up in OnGetDialogReturnValueAsync.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="dialogId"></param>
+		/// <param name="dialog"></param>
+		protected void GoToDialog(IDialogContext context, int dialogId, IDialog<object> dialog)
+		{
+			_pendingDialogId = dialogId;
+			context.Call(dialog, OnInnerResumeDialogAsync);
+		}
+
+		/// <summary>
+		/// Helper to handle state of dialogs stack.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="result"></param>
+		/// <returns></returns>
+		async Task OnInnerResumeDialogAsync(IDialogContext context, IAwaitable<object> result)
+		{
+			var actualResult = await result;
+			bool waitForNextMessage = await OnGetDialogReturnValueAsync(context, _pendingDialogId, actualResult);
+			if (waitForNextMessage)
+			{
+				context.Wait(OnInnerMessageReceivedAsync);
+			}
+		}
+
+		/// <summary>
+		/// Override to pick up return value of a dialog. Base implementation does nothing.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="dialogId"></param>
+		/// <param name="result"></param>
+		/// <returns>return TRUE if you want the dialog to wait for the next message, otherwise FALSE</returns>
+		protected virtual Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
+		{
+			return Task.FromResult(true);
+		}
+		
 	}
 }
