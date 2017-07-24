@@ -1,17 +1,12 @@
-﻿using Microsoft.Bot.Builder.Scorables;
-using Microsoft.Bot.Builder.Scorables.Internals;
+﻿using Microsoft.Bot.Builder.Scorables.Internals;
 using Microsoft.Bot.Connector;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Dialogs;
 
-namespace XamUBot
+namespace XamUBot.Dialogs
 {
 	// Generic types: IActivity = the item processed by the scorable
 	//                string    = the state it is holding on to
@@ -19,13 +14,22 @@ namespace XamUBot
 	// (and I have no idea why this is generic...seems like this is the only used 
 	//  combination of types!?)
 	// Good reference: http://www.garypretty.co.uk/2017/04/13/using-scorables-for-global-message-handling-and-interrupt-dialogs-in-bot-framework
-	public class LastResortScorable : ScorableBase<IActivity, string, double>
+
+
+	/// <summary>
+	/// Global handler that will kick in if the user wants to get help.
+	/// Pushes a temporary dialog onto the stack and then passes message handling back to the previously active dialog.
+	/// </summary>
+	public class GlobalHandlerDialog : ScorableBase<IActivity, string, double>
 	{
+		const string ConstantExit = "exit";
+		const string ConstantHelp = "help";
+
 		readonly IDialogTask _task;
 
 		// Apparently when this gets constructed, an IDialogTask instance is given to us.
 		// I do not understand yet, where this is coming from and what exactly it is...
-		public LastResortScorable(IDialogTask task)
+		public GlobalHandlerDialog(IDialogTask task)
 		{
 			_task = task;
 		}
@@ -38,16 +42,24 @@ namespace XamUBot
 			// Setting the state is done by returning a value here.
 
 			var message = item as IMessageActivity;
-			if(message?.Text == null)
+			if (message?.Text == null)
 			{
 				return Task.FromResult<string>(null);
 			}
 
-			if(message.Text.ToLowerInvariant().Contains("panic"))
+			var keyword = message.Text.ToLowerInvariant();
+
+			if (keyword.Contains("exit")
+				|| keyword.Contains("leave"))
 			{
 				// We set the message as the current state. Can really be any string here
 				// but this way we can pick up the entered message later when handling it.
-				return Task.FromResult(message.Text);
+				return Task.FromResult(ConstantExit);
+			}
+			else if (keyword.Contains("help")
+				|| keyword.Contains("support"))
+			{
+				return Task.FromResult(ConstantHelp);
 			}
 
 			return Task.FromResult<string>(null);
@@ -80,13 +92,20 @@ namespace XamUBot
 				return;
 			}
 
-			var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
+			if (state == ConstantExit)
+			{
+				// React to exit request. Brings us back to the rot dialog.
+				_task.Reset();
+			}
+			else if (state == ConstantHelp)
+			{
+				var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
 
-			// Wat??? Docs say this calls "the voided dialog" - very helpful!
-			replyDialog.Void<object, IMessageActivity>();
-
-			_task.Call(replyDialog, null);
-			await _task.PollAsync(token);
+				// See: https://stackoverflow.com/questions/45282506/what-are-the-void-and-pollasync-methods-of-idialogtask-for/45283394#45283394
+				var interruption = replyDialog.Void<object, IMessageActivity>();
+				_task.Call(interruption, null);
+				await _task.PollAsync(token);
+			}
 		}
 
 		protected override Task DoneAsync(IActivity item, string state, CancellationToken token)
@@ -96,6 +115,7 @@ namespace XamUBot
 		}
 	}
 
+	[Serializable]
 	public class CommonResponsesDialog : IDialog<object>
 	{
 		private readonly string _messageToSend;
@@ -108,7 +128,7 @@ namespace XamUBot
 		public async Task StartAsync(IDialogContext context)
 		{
 			await context.PostAsync(_messageToSend);
-			context.Done<object>(null);
+			context.Done<object>((IMessageActivity)null);
 		}
 	}
 }
