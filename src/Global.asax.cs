@@ -13,12 +13,12 @@ namespace XamUBot
 	{
 		protected void Application_Start()
 		{
-			GlobalConfiguration.Configure(WebApiConfig.Register);
+			Conversation.UpdateContainer(builder =>
+			{
+				builder.RegisterModule<GlobalMessageHandlerModule>();
+			});
 
-			// AutoFac
-			var builder = new ContainerBuilder();
-			builder.RegisterModule(new GlobalMessageHandlerModule());
-			builder.Update(Conversation.Container);
+			GlobalConfiguration.Configure(WebApiConfig.Register);
 		}
 	}
 }

@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using XamUBot.Dialogs;
 
 namespace XamUBot
 {
@@ -18,7 +19,7 @@ namespace XamUBot
 			// Register a handler for general input which gets triggered if the bot
 			// receives certain keywords.
 			builder
-				.Register(c => new LastResortScorable(c.Resolve<IDialogTask>()))
+				.Register(c => new GlobalHandlerDialog(c.Resolve<IDialogTask>()))
 				.As<IScorable<IActivity, double>>()
 				.InstancePerLifetimeScope();
 		}

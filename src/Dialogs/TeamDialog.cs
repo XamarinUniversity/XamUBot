@@ -8,87 +8,81 @@ using System.Linq;
 
 namespace XamUBot.Dialogs
 {
+	/// <summary>
+	/// Allows querying the XamU team.
+	/// </summary>
 	[Serializable]
-	public class TeamDialog : IDialog<object>
+	public class TeamDialog : BaseDialog
 	{
 		IList<TeamResponse> _teamList;
 
-		public async Task StartAsync(IDialogContext context)
+		protected async override Task OnInitializeAsync(IDialogContext context)
 		{
 			await context.PostAsync("What would you like to know about our teams?");
 			_teamList = await ApiManager.Instance.GetTeamAsync();
-			context.Wait(MessageReceivedAsync);
 		}
 
-		async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
-			var activity = await result as Activity;
+			var keyword = activity.Text.ToLowerInvariant();
 
-			var name = activity.Text.ToLowerInvariant();
+			// Presort list.
+			IEnumerable<TeamResponse> teamMembers = _teamList
+				.OrderBy(m => m.Name);
 
-			if(name.Contains("exit"))
+			// Show all members or filter.
+			if (!keyword.Contains("all")
+				&& !keyword.Contains("team")
+				&& !keyword.Contains("every")
+				&& !keyword.Contains("complete"))
 			{
-				context.Done("User exited");
-				return;
+				// Filter content unless all team members have been requested.
+				teamMembers = teamMembers
+					.Where(
+						m => m.Name.ToLowerInvariant().Contains(keyword)
+						|| m.Email.ToLowerInvariant().Contains(keyword)
+						|| m.Description.ToLowerInvariant().Contains(keyword)
+						|| m.Title.ToLowerInvariant().Contains(keyword)
+						|| m.TwitterUrl.ToLowerInvariant().Contains(keyword)
+						|| m.Website.ToLowerInvariant().Contains(keyword));
 			}
 
-            var teamMembers =_teamList.Where(m => m.Name.ToLowerInvariant().Contains(name) || m.Email.ToLowerInvariant().Contains(name));
+			var finalMembers = teamMembers.ToList();
 
-            if (teamMembers.Count() >= 1)
+			// Reply with a beautiful hero card!
+			var reply = activity.CreateReply();
+
+			if (finalMembers.Count > 0)
 			{
+				await context.PostAsync("Look what I found for you:");
 
-                var message = context.MakeMessage();
+				foreach (var person in finalMembers)
+				{
+					reply.AttachHeroCard(person.Name, person.Description, person.HeadshotUrl, person.ShortDescription, new Tuple<string, string>[] {
+						new Tuple<string, string>("Twitter", person.TwitterHandle),
+						new Tuple<string, string>("Email", person.Email)
+					});
+				}
 
-                foreach (var person in teamMembers)
-                {
-                    message.Attachments.Add(CreateHeroCard(person).ToAttachment());
-                }
-
-                if (teamMembers.Count() > 1)
-                    message.AttachmentLayout = "carousel";
-
-                await context.PostAsync(message);
-            }
+				if (finalMembers.Count > 1)
+				{
+					reply.AttachmentLayout = "carousel";
+				}
+			}
 			else
 			{
-				await context.PostAsync("Sorry, I couldn't find who you were looking for. Are you looking for a team member? Just tell me the name.");
+				reply.AttachHeroCard(
+					"Hello, is it me you're looking for?",
+					"Sorry, I couldn't find who you were looking for. Are you looking for a team member? Just tell me the name of the team member or provide any other keyword.",
+					@"http://i.imgur.com/QsIsjo8.jpg");
+			}
 
-                var msg = context.MakeMessage();
-                msg.Attachments.Add(new Attachment()
-                {
-                    ContentUrl = @"http://i.imgur.com/QsIsjo8.jpg",
-                    ContentType = "image/jpg",
-                    Name = "Hello, is it me you're looking for"
-                });
-                await context.PostAsync(msg);
+			await context.PostAsync(reply);
 
-            }
+			await context.PostAsync("Is there anything else you would like to know about the team?");
 
-			context.Wait(MessageReceivedAsync);
+			// Wait for next message.
+			return true;
 		}
-
-        private HeroCard CreateHeroCard(TeamResponse teamMember)
-        {
-            var heroCard = new HeroCard
-            {
-                Title = teamMember.Name,
-                Subtitle = teamMember.Title,
-                Text = teamMember.ShortDescription,
-                Images = new List<CardImage> { new CardImage(teamMember.HeadshotUrl) },
-            };
-
-            // create buttons as appropriate
-            var buttons = new List<CardAction>();
-
-            if (!string.IsNullOrEmpty(teamMember.TwitterHandle))
-                buttons.Add(new CardAction(ActionTypes.OpenUrl, "Twitter Profile", value: teamMember.TwitterUrl));
-
-            if (!string.IsNullOrEmpty(teamMember.Website))
-                buttons.Add(new CardAction(ActionTypes.OpenUrl, "Website", value: teamMember.Website));
-
-            heroCard.Buttons = buttons;
-
-            return heroCard;
-        }
-    }
+	}
 }
