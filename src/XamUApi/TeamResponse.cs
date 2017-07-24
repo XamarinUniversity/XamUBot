@@ -30,5 +30,14 @@ namespace XamUApi
 		public string Description { get; set; }
 		public string ShortDescription { get; set; }
 		public TeamMemberType Type { get; set; }
-	}
+        public string HeadshotUrl
+        {
+            // cleanup dodgy URL's that are currentlybeing returned
+            get { return Icon.Replace("https://university.xamarin.com/images/headshots/", ""); }
+        }
+        public string TwitterUrl
+        {
+            get { return $"https://twitter.com/{TwitterHandle}"; }
+        }
+    }
 }
