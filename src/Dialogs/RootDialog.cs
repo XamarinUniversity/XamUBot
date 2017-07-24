@@ -15,6 +15,12 @@ namespace XamUBot.Dialogs
 			Topic
 		}
 
+		enum DialogIds
+		{
+			TeamDialog,
+			TracksDialog,
+		}
+
 		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
 			switch (activity.Type)
@@ -31,7 +37,7 @@ namespace XamUBot.Dialogs
 		
 		void ShowTopics(IDialogContext context)
 		{
-			ShowPicker(context, (int)PickerIds.Topic, "What would you like to know? Note: you can always say 'panic' if you are lost.", new[] { "Team", "Tracks", "Test LUIS", "QandA" });
+			ShowPicker(context, (int)PickerIds.Topic, "What would you like to know? Note: you can always say 'help' if you are lost.", new[] { "Team", "Tracks", "Test LUIS", "QandA" });
 		}
 
 		protected async override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
@@ -46,7 +52,8 @@ namespace XamUBot.Dialogs
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("team"))
 				{
-					context.Call(new TeamDialog(), null);
+					//context.Call(new TeamDialog(), null);
+					GoToDialog(context,(int)DialogIds.TeamDialog, new TeamDialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("test luis"))
 				{
@@ -65,6 +72,12 @@ namespace XamUBot.Dialogs
 				ShowTopics(context);
 				return true;
 			}
+		}
+
+		protected async override Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
+		{
+			await context.PostAsync("Returning from " + (DialogIds)dialogId);
+			return true;
 		}
 	}
 }
