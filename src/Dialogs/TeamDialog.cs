@@ -20,9 +20,9 @@ namespace XamUBot.Dialogs
 			context.Wait(MessageReceivedAsync);
 		}
 
-		async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
+		async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
 		{
-			var activity = await result;
+			var activity = await result as Activity;
 
 			var name = activity.Text.ToLowerInvariant();
 

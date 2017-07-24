@@ -39,6 +39,11 @@ namespace XamUBot.Dialogs
 				context.Call(new TestCardsDialog(), OnAfterCardsDialog);
 				
 			}
+			else if (topic.ToLowerInvariant().Contains("qanda"))
+			{
+				context.Call(new TestQandADialog(), OnAfterQandADialog);
+
+			}
 			else
 			{
 				await context.PostAsync($"Unfortunately I cannot help you with that.");
@@ -49,10 +54,10 @@ namespace XamUBot.Dialogs
 
 		void ShowTopics(IDialogContext context)
 		{
-			PromptDialog.Choice(context, OnAfterPickTopic, new[] { "Team", "Tracks", "Test LUIS", "Cards" }, "What would you like to know?");
+			PromptDialog.Choice(context, OnAfterPickTopic, new[] { "Team", "Tracks", "Test LUIS", "Cards", "QandA"}, "What would you like to know? Note: you can always say 'panic' if you are lost.");
 		}
 
-		private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
+		private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
 		{
 			var activity = await result as Activity;
 
@@ -101,6 +106,12 @@ namespace XamUBot.Dialogs
 		}
 
 		async Task OnAfterLuisDialog(IDialogContext context, IAwaitable<object> result)
+		{
+			await context.PostAsync("Data returned: " + (await result));
+			context.Wait(MessageReceivedAsync);
+		}
+
+		async Task OnAfterQandADialog(IDialogContext context, IAwaitable<object> result)
 		{
 			await context.PostAsync("Data returned: " + (await result));
 			context.Wait(MessageReceivedAsync);
