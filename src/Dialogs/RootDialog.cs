@@ -31,7 +31,7 @@ namespace XamUBot.Dialogs
 		
 		void ShowTopics(IDialogContext context)
 		{
-			ShowPicker(context, (int)PickerIds.Topic, "What would you like to know? Note: you can always say 'panic' if you are lost.", new[] { "Team", "Tracks", "Test LUIS", "Cards", "QandA" });
+			ShowPicker(context, (int)PickerIds.Topic, "What would you like to know? Note: you can always say 'panic' if you are lost.", new[] { "Team", "Tracks", "Test LUIS", "QandA" });
 		}
 
 		protected async override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
@@ -51,10 +51,6 @@ namespace XamUBot.Dialogs
 				else if (selectedChoice.ToLowerInvariant().Contains("test luis"))
 				{
 					context.Call(new TestLuisDialog(), null);
-				}
-				else if (selectedChoice.ToLowerInvariant().Contains("cards"))
-				{
-					context.Call(new TestCardsDialog(), null);
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("qanda"))
 				{
