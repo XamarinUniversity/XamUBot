@@ -5,6 +5,7 @@ using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System.Linq;
+using System;
 
 namespace XamUBot
 {
@@ -33,6 +34,15 @@ namespace XamUBot
 			{
 				return BadRequest("No activity provided.");
 			}
+
+            // show typing indicator - because bots type too :)
+            if (activity.Type == ActivityTypes.Message)
+            {
+                var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                Activity isTypingReply = activity.CreateReply();
+                isTypingReply.Type = ActivityTypes.Typing;
+                await connector.Conversations.ReplyToActivityAsync(isTypingReply);
+            }
 
 
 			if(activity.Type == ActivityTypes.ConversationUpdate)
