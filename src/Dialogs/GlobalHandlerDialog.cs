@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Dialogs;
+using System.Collections.Generic;
+using System.Web.Hosting;
 
 namespace XamUBot.Dialogs
 {
@@ -24,6 +26,8 @@ namespace XamUBot.Dialogs
 	{
 		const string ConstantExit = "exit";
 		const string ConstantHelp = "help";
+        const string ConstantSwear = "swear";
+        Censored.Censor _censor;
 
 		readonly IDialogTask _task;
 
@@ -32,6 +36,12 @@ namespace XamUBot.Dialogs
 		public GlobalHandlerDialog(IDialogTask task)
 		{
 			_task = task;
+
+            // load the list of censored words
+            // obtained via: http://www.bannedwordlist.com/
+            // I think most Australians could come up with a better list
+            // off the top of their heads
+            _censor = new Censored.Censor(GetNaughtyWordList());
 		}
 
 		protected override Task<string> PrepareAsync(IActivity item, CancellationToken token)
@@ -49,18 +59,21 @@ namespace XamUBot.Dialogs
 
 			var keyword = message.Text.ToLowerInvariant();
 
-			if (keyword.Contains("exit")
-				|| keyword.Contains("leave"))
-			{
-				// We set the message as the current state. Can really be any string here
-				// but this way we can pick up the entered message later when handling it.
-				return Task.FromResult(ConstantExit);
-			}
-			else if (keyword.Contains("help")
-				|| keyword.Contains("support"))
-			{
-				return Task.FromResult(ConstantHelp);
-			}
+            if (keyword.Contains("exit")
+                || keyword.Contains("leave"))
+            {
+                // We set the message as the current state. Can really be any string here
+                // but this way we can pick up the entered message later when handling it.
+                return Task.FromResult(ConstantExit);
+            }
+            else if (keyword.Contains("help")
+                || keyword.Contains("support"))
+            {
+                return Task.FromResult(ConstantHelp);
+            }
+            else if (_censor.HasCensoredWord(keyword))
+                return Task.FromResult(ConstantSwear);
+           
 
 			return Task.FromResult<string>(null);
 		}
@@ -106,14 +119,29 @@ namespace XamUBot.Dialogs
 				_task.Call(interruption, null);
 				await _task.PollAsync(token);
 			}
-		}
+            else if (state == ConstantSwear)
+            {
+                var replyDialog = new CommonResponsesDialog($"... think of the children ...");
+                var interruption = replyDialog.Void<object, IMessageActivity>();
+                _task.Call(interruption, null);
+                await _task.PollAsync(token);
+            }
+        }
 
 		protected override Task DoneAsync(IActivity item, string state, CancellationToken token)
 		{
 			// Can be used for cleanup.
 			return Task.CompletedTask;
 		}
-	}
+
+        private List<string> GetNaughtyWordList()
+        {
+            var censoredWords = new List<string>();
+            var fileContents = System.IO.File.ReadAllLines(HostingEnvironment.MapPath(@"~/App_Data/Naughty.txt"));
+            censoredWords.AddRange(fileContents);
+            return censoredWords;
+        }
+    }
 
 	[Serializable]
 	public class CommonResponsesDialog : IDialog<object>
