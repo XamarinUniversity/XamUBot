@@ -35,6 +35,7 @@
   <ItemGroup>
     <Compile Include="ApiManagerFactory.cs" />
     <Compile Include="ApiManager.cs" />
+    <Compile Include="BotAuditContext.cs" />
     <Compile Include="Entities\BotAuditItem.cs" />
     <Compile Include="IApiManager.cs" />
     <Compile Include="MockApiManager.cs" />
