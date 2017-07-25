@@ -19,7 +19,7 @@ namespace XamUBot.Dialogs
 		protected async override Task OnInitializeAsync(IDialogContext context)
 		{
 			await context.PostAsync("What would you like to know about our teams?");
-			_teamList = await ApiManager.Instance.GetTeamAsync();
+			_teamList = await ApiManagerFactory.Instance.GetTeamAsync();
 		}
 
 		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
@@ -68,6 +68,16 @@ namespace XamUBot.Dialogs
 				{
 					reply.AttachmentLayout = "carousel";
 				}
+
+				// TODO: should not be like this..
+				await ApiManagerFactory.Instance.SaveAuditAsync(new BotAuditItem
+				{
+					// Can we get to the login token??
+					UserId = -1,
+					Context = BotAuditContext.Team,
+					Question = keyword,
+					Answer = reply.ToAuditContent() // $"List of {finalMembers.Count} team members."
+				});
 			}
 			else
 			{

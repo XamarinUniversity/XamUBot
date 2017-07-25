@@ -43,5 +43,11 @@ namespace XamUBot.Dialogs
 			
 			return heroCard;
 		}
+
+		public static string ToAuditContent(this Activity activity)
+		{
+			// TODO: what to do?
+			return activity.Text;
+		}
 	}
 }
