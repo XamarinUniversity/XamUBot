@@ -54,7 +54,7 @@ namespace XamUBot.Dialogs
 
 			if (finalMembers.Count > 0)
 			{
-				await context.PostAsync("Look what I found for you:");
+                await context.PostAsync("Look what I found for you:");
 
 				foreach (var person in finalMembers)
 				{
@@ -68,16 +68,6 @@ namespace XamUBot.Dialogs
 				{
 					reply.AttachmentLayout = "carousel";
 				}
-
-				// TODO: should not be like this..
-				await ApiManagerFactory.Instance.SaveAuditAsync(new BotAuditItem
-				{
-					// Can we get to the login token??
-					UserId = -1,
-					Context = BotAuditContext.Team,
-					Question = keyword,
-					Answer = reply.ToAuditContent() // $"List of {finalMembers.Count} team members."
-				});
 			}
 			else
 			{

@@ -57,7 +57,7 @@ namespace XamUApi
 
 		public async Task<BotAuditItem> SaveAuditAsync(BotAuditItem auditItem)
 		{
-			if(auditItem == null || string.IsNullOrWhiteSpace(auditItem.Question))
+			if(auditItem == null)
 			{
 				return null;
 			}

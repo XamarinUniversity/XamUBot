@@ -125,6 +125,7 @@
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
+    <Compile Include="DebugActivityLogger.cs" />
     <Compile Include="Dialogs\BaseDialog.cs" />
     <Compile Include="Dialogs\DialogExtensions.cs" />
     <Compile Include="Dialogs\TestQandADialog.cs" />
@@ -156,6 +157,9 @@
       <Project>{9215677a-832d-4097-bf1c-5d1124dc4df0}</Project>
       <Name>XamUApi</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Audit\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -3,6 +3,9 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using Microsoft.Bot.Builder.Dialogs;
+using XamUApi;
 
 namespace XamUBot.Dialogs
 {
@@ -44,10 +47,6 @@ namespace XamUBot.Dialogs
 			return heroCard;
 		}
 
-		public static string ToAuditContent(this Activity activity)
-		{
-			// TODO: what to do?
-			return activity.Text;
-		}
-	}
+
+    }
 }
