@@ -30,10 +30,21 @@ namespace XamUBot.Dialogs
 		int _pendingDialogId;
 		int _pendingPickerId;
 
+		// Contains the last query (incoming message of the user)
+		string _lastQuery;
+		// Keeps track how many times the same query came in.
+		int _lastQueryRepetitions = 0;
+
+		// Keeps track how many times teh bot did not know an answer.
+		int _notUnderstoodCounter = 0;
+
 		public async Task StartAsync(IDialogContext context)
 		{
-			await OnInitializeAsync(context);
-			context.Wait(OnInnerMessageReceivedAsync);
+			var waitForMessage = await OnInitializeAsync(context);
+			if (waitForMessage)
+			{
+				context.Wait(OnInnerMessageReceivedAsync);
+			}
 		}
 
 		async Task OnInnerMessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
@@ -43,7 +54,17 @@ namespace XamUBot.Dialogs
 			var activity = await result as Activity;
 			if (activity != null)
 			{
-				waitForNextMessage = await OnMessageReceivedAsync(context, activity);
+				if (activity.Text?.Trim().ToLowerInvariant() == _lastQuery)
+				{
+					_lastQueryRepetitions++;
+				}
+				else
+				{
+					_lastQueryRepetitions = 0;
+					_lastQuery = activity.Text?.Trim()?.ToLowerInvariant();
+				}
+
+				waitForNextMessage = await OnMessageReceivedAsync(context, activity, _lastQueryRepetitions);
 			}
 
 			// Wait for next message.
@@ -58,9 +79,10 @@ namespace XamUBot.Dialogs
 		/// This does nothing in the base class.
 		/// </summary>
 		/// <param name="context"></param>
-		protected async virtual Task OnInitializeAsync(IDialogContext context)
+		protected async virtual Task<bool> OnInitializeAsync(IDialogContext context)
 		{
 			// Does nothing in base.
+			return true;
 		}
 
 		/// <summary>
@@ -68,8 +90,9 @@ namespace XamUBot.Dialogs
 		/// </summary>
 		/// <param name="context"></param>
 		/// <param name="msgActivity"></param>
+		/// <param name="repetitions">indicates how often the same message has been sent before by the user</param>
 		/// <returns>return TRUE if you want to wait for the next message, return FALSE if you are redirecting to another dialog or create a poll</returns>
-		protected abstract Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity msgActivity);
+		protected abstract Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
 
 		/// <summary>
 		/// Sends a picker with arbitrary choices to the client. Override OnChoiceMadeAsync to react to the result of the picker.
@@ -80,19 +103,23 @@ namespace XamUBot.Dialogs
 		protected void ShowPicker(IDialogContext context, int pickerId, string title, params string[] buttons)
 		{
 			_pendingPickerId = pickerId;
-			PromptDialog.Choice(context, OnInnerPickerSelectedAsync, buttons, title);
+			var promptOptions = new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "", options: new List<string>(buttons), attempts: 2, promptStyler: null);
+			PromptDialog.Choice(context, OnInnerPickerSelectedAsync, promptOptions);
 		}
 
 		/// <summary>
-		/// Sends a yes/no picker to the client. Override OnChoiceMadeAsync to react to the result of the picker.
+		/// Sends a yes/no picker to the client. Override <see cref="OnPickerSelectedAsync"/> to react to the result of the picker.
 		/// </summary>
 		/// <param name="context"></param>
 		/// <param name="title"></param>
 		/// <param name="buttons"></param>
-		protected void SendPicker(IDialogContext context, int pickerId, string title)
+		/// <param name="pickerId">arbitrary ID which will be provided to you when getting the results of the picker</param>
+		/// <param name="attempts">number of attemps before giving up if user provides an invalid answer</param>
+		protected void ShowPicker(IDialogContext context, int pickerId, string title)
 		{
 			_pendingPickerId = pickerId;
-			PromptDialog.Confirm(context, OnInnerPickerSelectedAsync, title);
+			var promptOptions = new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "", attempts: 2, promptStyler: null);
+			PromptDialog.Confirm(context, OnInnerPickerSelectedAsync, promptOptions);
 		}
 
 		/// <summary>
@@ -103,8 +130,21 @@ namespace XamUBot.Dialogs
 		/// <returns></returns>
 		async Task OnInnerPickerSelectedAsync(IDialogContext context, IAwaitable<object> result)
 		{
-			var selectedItem = await result;
-			await OnPickerSelectedAsync(context, _pendingPickerId, selectedItem as string);
+			object selectedItem = null;
+
+			try
+			{
+				selectedItem = await result;
+			}
+			catch (TooManyAttemptsException)
+			{
+			}
+
+			bool waitForNextMessage = await OnPickerSelectedAsync(context, _pendingPickerId, selectedItem as string);
+			if (waitForNextMessage)
+			{
+				context.Wait(OnInnerMessageReceivedAsync);
+			}
 		}
 
 		/// <summary>
@@ -115,7 +155,16 @@ namespace XamUBot.Dialogs
 		/// <returns></returns>
 		async Task OnInnerPickerSelectedAsync(IDialogContext context, IAwaitable<bool> result)
 		{
-			var selectedItem = await result;
+			bool selectedItem = false;
+
+			try
+			{
+				selectedItem = await result;
+			}
+			catch (TooManyAttemptsException)
+			{
+			}
+
 			bool waitForNextMessage = await OnPickerSelectedAsync(context, _pendingPickerId, selectedItem ? ChoiceYes : ChoiceNo);
 			if (waitForNextMessage)
 			{
@@ -127,12 +176,36 @@ namespace XamUBot.Dialogs
 		/// Gets called after a choice has been made in a a picker.
 		/// </summary>
 		/// <param name="context"></param>
-		/// <param name="selectedChoice">the title of the selected item. For yes/no picker, user BaseDialog.ConstantYes and BaseDialog.ConstantNo</param>
+		/// <param name="selectedChoice">the title of the selected item. For yes/no picker, user BaseDialog.ConstantYes and BaseDialog.ConstantNo. If this is NULL, the user has entered
+		/// and invalid value which can happen if they exceed the number of retry attempts.</param>
 		/// <returns>return TRUE if you want the dialog to wait for the next message, otherwise FALSE</returns>
-		protected virtual Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
+		protected async virtual Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
 		{
-			// Does nothing in base.
-			return Task.FromResult(true);
+			if (pickerId == (int)PickerIds.NotUnderstoodMultipleTimes)
+			{
+				switch(selectedChoice)
+				{
+					case NotUnderstood_PickerOption_BackToMain:
+						PopToRootDialog(context);
+						return false;
+
+					case NotUnderstood_PickerOption_GoToQandA:
+						GoToDialog(context, (int)DialogIds.QandADialog, new QandADialog());
+						return false;
+
+					case NotUnderstood_PickerOption_KeepTrying:
+						// Just wait for next message.
+						await context.PostAsync("Ok, let's try that again!");
+						return true;
+
+					default:
+						// In doubt: back to start.
+						PopToRootDialog(context);
+						return false;
+				}
+			}
+
+			return true;
 		}
 
 		/// <summary>
@@ -156,6 +229,13 @@ namespace XamUBot.Dialogs
 		async Task OnInnerResumeDialogAsync(IDialogContext context, IAwaitable<object> result)
 		{
 			var actualResult = await result;
+			string internalReturnValue = (string)actualResult;
+			if(internalReturnValue != null && internalReturnValue == InternalMessage_PopToRoot)
+			{
+				context.Done(internalReturnValue);
+				return;
+			}
+
 			bool waitForNextMessage = await OnGetDialogReturnValueAsync(context, _pendingDialogId, actualResult);
 			if (waitForNextMessage)
 			{
@@ -175,7 +255,14 @@ namespace XamUBot.Dialogs
 			return Task.FromResult(true);
 		}
 
-		protected async Task<LuisResult> PredictLuisAsync(string message, string intentPrefix = null)
+		/// <summary>
+		/// Performs a call to LUIS to get back the best matching intent.
+		/// </summary>
+		/// <param name="message"></param>
+		/// <param name="intentPrefix">use to filter the intents</param>
+		/// <param name="minimumScore">require the found itent to have a certain minimum score. If below threshold, NULL will be returned for the top scoring intent</param>
+		/// <returns></returns>
+		protected async Task<LuisResult> PredictLuisAsync(string message, string intentPrefix = null, float minimumScore = 0.6f)
 		{
 			if(string.IsNullOrWhiteSpace(message))
 			{
@@ -208,10 +295,63 @@ namespace XamUBot.Dialogs
 			}
 
 			// Update the top scoring intent because we have potentially removed the original intent.
-			luisResult.TopScoringIntent = luisResult.Intents.FirstOrDefault();
+			// Also the top intent could be below our required minimum score.
+			luisResult.TopScoringIntent = luisResult.Intents.FirstOrDefault(i => i.Score >= minimumScore);
 
 			return luisResult;
 		}
-		
+
+		/// <summary>
+		/// Helper method to deal with situations where the bot does not understand input.
+		/// On every call the method increases an internal counter. If that counter exceeds the threshold,
+		/// the optional message is displayed and a picker is shown that allows the user to take action to reover.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="optionalMessage"></param>
+		/// <returns></returns>
+		protected async Task<bool> HandleInputNotUnderstoodAsync(IDialogContext context, string optionalMessage = null)
+		{
+			_notUnderstoodCounter++;
+			if(_notUnderstoodCounter >= 2)
+			{
+				_notUnderstoodCounter = 0;
+				if(!string.IsNullOrWhiteSpace(optionalMessage))
+				{
+					await context.PostAsync(optionalMessage);
+				}
+				ShowDefaultNotUnderstoodPicker(context);
+				return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Shows the picker that is used if the bot does not understand input. It is used by <see cref="HandleInputNotUnderstoodAsync(IDialogContext, string)"/>
+		/// but you can also use it manually.
+		/// </summary>
+		/// <param name="context"></param>
+		protected void ShowDefaultNotUnderstoodPicker(IDialogContext context)
+		{
+			ShowPicker(context,
+				(int)PickerIds.NotUnderstoodMultipleTimes,
+				"Sorry, I did not understand. Are you looking for somehing else?",
+				NotUnderstood_PickerOption_BackToMain, NotUnderstood_PickerOption_GoToQandA, NotUnderstood_PickerOption_KeepTrying);
+		}
+
+		const string NotUnderstood_PickerOption_BackToMain = "Show all options";
+		const string NotUnderstood_PickerOption_GoToQandA = "Check Q&A";
+		const string NotUnderstood_PickerOption_KeepTrying = "Stay here";
+
+		/// <summary>
+		/// Pops to the root dialog.
+		/// </summary>
+		/// <param name="context"></param>
+		protected void PopToRootDialog(IDialogContext context)
+		{
+			context.Done(InternalMessage_PopToRoot);
+		}
+
+		const string InternalMessage_PopToRoot = "InternalMessage_PopToRoot";
 	}
 }

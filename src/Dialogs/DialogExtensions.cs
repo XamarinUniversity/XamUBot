@@ -61,9 +61,15 @@ namespace XamUBot.Dialogs
 				return null;
 			}
 
-			IList<Microsoft.Cognitive.LUIS.Entity> entities = null;
-			result.Entities.TryGetValue(entityName.ToLowerInvariant(), out entities);
+			var key = result.Entities.Keys.FirstOrDefault(k => k.ToLowerInvariant() == entityName.ToLowerInvariant());
 
+			if(key == null)
+			{
+				return null;
+			}
+
+			IList<Microsoft.Cognitive.LUIS.Entity> entities = result.Entities[key];
+			
 			if(entities == null)
 			{
 				return null;

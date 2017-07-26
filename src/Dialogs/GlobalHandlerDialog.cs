@@ -5,9 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Dialogs;
-using System.Collections.Generic;
-using System.Web.Hosting;
-using XamUBot.Utternaces;
+using XamUBot.Utterances;
 
 namespace XamUBot.Dialogs
 {
