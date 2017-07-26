@@ -7,6 +7,7 @@ using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Dialogs;
 using System.Collections.Generic;
 using System.Web.Hosting;
+using XamUBot.Utternaces;
 
 namespace XamUBot.Dialogs
 {
@@ -24,11 +25,6 @@ namespace XamUBot.Dialogs
 	/// </summary>
 	public class GlobalHandlerDialog : ScorableBase<IActivity, string, double>
 	{
-		const string ConstantExit = "exit";
-		const string ConstantHelp = "help";
-        const string ConstantSwear = "swear";
-        Censored.Censor _censor;
-
 		readonly IDialogTask _task;
 
 		// Apparently when this gets constructed, an IDialogTask instance is given to us.
@@ -36,12 +32,6 @@ namespace XamUBot.Dialogs
 		public GlobalHandlerDialog(IDialogTask task)
 		{
 			_task = task;
-
-            // load the list of censored words
-            // obtained via: http://www.bannedwordlist.com/
-            // I think most Australians could come up with a better list
-            // off the top of their heads
-            _censor = new Censored.Censor(GetNaughtyWordList());
 		}
 
 		protected override Task<string> PrepareAsync(IActivity item, CancellationToken token)
@@ -59,20 +49,18 @@ namespace XamUBot.Dialogs
 
 			var keyword = message.Text.ToLowerInvariant();
 
-            if (keyword.Contains("exit")
-                || keyword.Contains("leave"))
+            if (Keywords.IsExitKeyword(keyword))
             {
                 // We set the message as the current state. Can really be any string here
                 // but this way we can pick up the entered message later when handling it.
-                return Task.FromResult(ConstantExit);
+                return Task.FromResult(Keywords.Exit);
             }
-            else if (keyword.Contains("help")
-                || keyword.Contains("support"))
+            else if (Keywords.IsHelpKeyword(keyword))
             {
-                return Task.FromResult(ConstantHelp);
+                return Task.FromResult(Keywords.Help);
             }
-            else if (_censor.HasCensoredWord(keyword))
-                return Task.FromResult(ConstantSwear);
+            else if (Keywords.IsSwearWord(keyword))
+                return Task.FromResult(Keywords.Swear);
            
 
 			return Task.FromResult<string>(null);
@@ -104,27 +92,27 @@ namespace XamUBot.Dialogs
 			{
 				return;
 			}
-
-			if (state == ConstantExit)
-			{
-				// React to exit request. Brings us back to the rot dialog.
-				_task.Reset();
-			}
-			else if (state == ConstantHelp)
-			{
-				var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
-
-				// See: https://stackoverflow.com/questions/45282506/what-are-the-void-and-pollasync-methods-of-idialogtask-for/45283394#45283394
-				var interruption = replyDialog.Void<object, IMessageActivity>();
-				_task.Call(interruption, null);
-				await _task.PollAsync(token);
-			}
-            else if (state == ConstantSwear)
+            switch (state)
             {
-                var replyDialog = new CommonResponsesDialog($"... think of the children ...");
-                var interruption = replyDialog.Void<object, IMessageActivity>();
-                _task.Call(interruption, null);
-                await _task.PollAsync(token);
+                case Keywords.Exit:
+                    // React to exit request. Brings us back to the root dialog.
+                    _task.Reset(); break;
+                case Keywords.Help:
+                    var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
+
+                    // See: https://stackoverflow.com/questions/45282506/what-are-the-void-and-pollasync-methods-of-idialogtask-for/45283394#45283394
+                    var interruption = replyDialog.Void<object, IMessageActivity>();
+                    _task.Call(interruption, null);
+                    await _task.PollAsync(token);
+                    break;
+                case Keywords.Swear:
+                    var response = ResponseUtterances.GetRandomResponse("Swear");
+                    var reply = new CommonResponsesDialog(response);
+                    var interup = reply.Void<object, IMessageActivity>();
+                    _task.Call(interup, null);
+                    await _task.PollAsync(token);
+                    break;
+                    
             }
         }
 
@@ -133,14 +121,6 @@ namespace XamUBot.Dialogs
 			// Can be used for cleanup.
 			return Task.CompletedTask;
 		}
-
-        private List<string> GetNaughtyWordList()
-        {
-            var censoredWords = new List<string>();
-            var fileContents = System.IO.File.ReadAllLines(HostingEnvironment.MapPath(@"~/App_Data/Naughty.txt"));
-            censoredWords.AddRange(fileContents);
-            return censoredWords;
-        }
     }
 
 	[Serializable]

@@ -20,16 +20,26 @@ namespace XamUApi
 				{
 					Name = "Kym",
 					Description = "Kym is one of the Australian guys and knows pretty much everything.",
-					Icon = @"http://i.imgur.com/QsIsjo8.jpg"
-				},
+					Icon = @"http://i.imgur.com/QsIsjo8.jpg",
+                    Title = @"Mr. Professor",
+                    TwitterHandle = "kphillpotts",
+                    Website = "http://stuff.com",
+                    Email = "kym@kym.com"
+                },
 
 				new TeamResponse
 				{
 					Name = "René",
 					Description = "René really only knows Turbo Pascal but pretends to be an iOS expert.",
-					Icon = @"http://i.imgur.com/QsIsjo8.jpg"
+					Icon = @"http://i.imgur.com/QsIsjo8.jpg",
+                    Title = @"Mr. Professor",
+                    TwitterHandle = "rene",
+                    Website = "http://stuff.com",
+                    Email = "rene@rene.com"
+
 				}
 			};
+
 		}
 
 		public async Task<IList<Track>> GetTracksAsync(string filter = null)

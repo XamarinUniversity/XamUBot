@@ -120,6 +120,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Data\Naughty.txt" />
+    <Content Include="App_Data\ReplyUtterances.txt" />
     <Content Include="default.htm" />
     <Content Include="Global.asax" />
     <Content Include="Web.config">
@@ -143,6 +144,8 @@
     <Compile Include="GlobalMessageHandlerModule.cs" />
     <Compile Include="Dialogs\GlobalHandlerDialog.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utternaces\Keywords.cs" />
+    <Compile Include="Utternaces\ResponseUtterances.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config">

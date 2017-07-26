@@ -15,8 +15,10 @@ namespace XamUBot.Dialogs
 	public class TeamDialog : BaseDialog
 	{
 		IList<TeamResponse> _teamList;
+        private string _lastResponse = "";
+        private int _lastResponseCount = 0;
 
-		protected async override Task OnInitializeAsync(IDialogContext context)
+        protected async override Task OnInitializeAsync(IDialogContext context)
 		{
 			await context.PostAsync("What would you like to know about our teams?");
 			_teamList = await ApiManagerFactory.Instance.GetTeamAsync();
@@ -24,7 +26,20 @@ namespace XamUBot.Dialogs
 
 		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
-			var keyword = activity.Text.ToLowerInvariant();
+            var keyword = activity.Text.ToLowerInvariant();
+
+            // check if the user is repeating themselves
+            //if (keyword == _lastResponse)
+            //{
+            //    _lastResponseCount++;
+            //    if (_lastResponseCount > 3)
+            //        await context.PostAsync(ResponseUtterances.GetRandomResponse("Repeat"));
+            //}
+            //else
+            //{
+            //    _lastResponse = keyword;
+            //    _lastResponseCount = 0;
+            //}
 
 			// Presort list.
 			IEnumerable<TeamResponse> teamMembers = _teamList

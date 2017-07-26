@@ -1,0 +1,10 @@
+﻿Welcome|Hi I'm the Xamarin University Chatbot
+Welcome|G'day I'm the Xamarin Univesity Bot
+Hello|G'day
+Hello|Hi
+Hello|Hello
+Swear|Well I never...
+Swear|No need for bad langauge
+Swear|Good Gracious
+Repeat|We seem to be repeating ourselves, type help if you require assistance
+Repeat|Albert Einstein said "The definition of insanity is doing the same thing over and over again and expecting different results". Let me know if you require some assistance by typing help.
