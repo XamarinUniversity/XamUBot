@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.Cognitive.LUIS;
 
 namespace XamUBot.Dialogs
 {
@@ -42,6 +43,41 @@ namespace XamUBot.Dialogs
 			activity.Attachments.Add(heroCard.ToAttachment());
 			
 			return heroCard;
+		}
+
+		/// <summary>
+		/// Extracts the best matching entity from a result.
+		/// </summary>
+		/// <param name="result"></param>
+		/// <param name="entityName"></param>
+		/// <returns></returns>
+		public static Microsoft.Cognitive.LUIS.Entity GetBestMatchingEntity(this LuisResult result, string entityName)
+		{
+			if(result?.Entities == null)
+			{
+				return null;
+			}
+
+			IList<Microsoft.Cognitive.LUIS.Entity> entities = null;
+			result.Entities.TryGetValue(entityName.ToLowerInvariant(), out entities);
+
+			if(entities == null)
+			{
+				return null;
+			}
+
+			var bestEntity = entities
+				.OrderByDescending(e => e.Score)
+				.FirstOrDefault();
+
+			if(bestEntity != null)
+			{
+				// All entities are returned as lowercase. To get the actual casing we must extract it from the original query.
+				// See: https://github.com/Microsoft/BotBuilder/issues/963
+				bestEntity.Name = result.OriginalQuery.Substring(bestEntity.StartIndex, bestEntity.EndIndex - bestEntity.StartIndex + 1);
+			}
+
+			return bestEntity;
 		}
 	}
 }
