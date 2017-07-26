@@ -19,7 +19,7 @@ namespace XamUBot.Dialogs
 		{
 			var activity = await result as Activity;
 
-			var tracks = await ApiManager.Instance.GetTracksAsync();
+			var tracks = await ApiManagerFactory.Instance.GetTracksAsync();
 
 			foreach(var track in tracks)
 			{

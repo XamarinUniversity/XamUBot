@@ -1,8 +1,11 @@
-﻿using Microsoft.Bot.Connector;
+using Microsoft.Bot.Connector;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
+using Microsoft.Bot.Builder.Dialogs;
+using XamUApi;
 using Microsoft.Cognitive.LUIS;
 
 namespace XamUBot.Dialogs

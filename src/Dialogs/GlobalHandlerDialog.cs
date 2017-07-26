@@ -5,6 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Dialogs;
+using System.Collections.Generic;
+using System.Web.Hosting;
+using XamUBot.Utternaces;
 
 namespace XamUBot.Dialogs
 {
@@ -22,9 +25,6 @@ namespace XamUBot.Dialogs
 	/// </summary>
 	public class GlobalHandlerDialog : ScorableBase<IActivity, string, double>
 	{
-		const string ConstantExit = "exit";
-		const string ConstantHelp = "help";
-
 		readonly IDialogTask _task;
 
 		// Apparently when this gets constructed, an IDialogTask instance is given to us.
@@ -49,18 +49,19 @@ namespace XamUBot.Dialogs
 
 			var keyword = message.Text.ToLowerInvariant();
 
-			if (keyword.Contains("exit")
-				|| keyword.Contains("leave"))
-			{
-				// We set the message as the current state. Can really be any string here
-				// but this way we can pick up the entered message later when handling it.
-				return Task.FromResult(ConstantExit);
-			}
-			else if (keyword.Contains("help")
-				|| keyword.Contains("support"))
-			{
-				return Task.FromResult(ConstantHelp);
-			}
+            if (Keywords.IsExitKeyword(keyword))
+            {
+                // We set the message as the current state. Can really be any string here
+                // but this way we can pick up the entered message later when handling it.
+                return Task.FromResult(Keywords.Exit);
+            }
+            else if (Keywords.IsHelpKeyword(keyword))
+            {
+                return Task.FromResult(Keywords.Help);
+            }
+            else if (Keywords.IsSwearWord(keyword))
+                return Task.FromResult(Keywords.Swear);
+           
 
 			return Task.FromResult<string>(null);
 		}
@@ -91,29 +92,36 @@ namespace XamUBot.Dialogs
 			{
 				return;
 			}
+            switch (state)
+            {
+                case Keywords.Exit:
+                    // React to exit request. Brings us back to the root dialog.
+                    _task.Reset(); break;
+                case Keywords.Help:
+                    var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
 
-			if (state == ConstantExit)
-			{
-				// React to exit request. Brings us back to the rot dialog.
-				_task.Reset();
-			}
-			else if (state == ConstantHelp)
-			{
-				var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
-
-				// See: https://stackoverflow.com/questions/45282506/what-are-the-void-and-pollasync-methods-of-idialogtask-for/45283394#45283394
-				var interruption = replyDialog.Void<object, IMessageActivity>();
-				_task.Call(interruption, null);
-				await _task.PollAsync(token);
-			}
-		}
+                    // See: https://stackoverflow.com/questions/45282506/what-are-the-void-and-pollasync-methods-of-idialogtask-for/45283394#45283394
+                    var interruption = replyDialog.Void<object, IMessageActivity>();
+                    _task.Call(interruption, null);
+                    await _task.PollAsync(token);
+                    break;
+                case Keywords.Swear:
+                    var response = ResponseUtterances.GetResponse("Swear");
+                    var reply = new CommonResponsesDialog(response);
+                    var interup = reply.Void<object, IMessageActivity>();
+                    _task.Call(interup, null);
+                    await _task.PollAsync(token);
+                    break;
+                    
+            }
+        }
 
 		protected override Task DoneAsync(IActivity item, string state, CancellationToken token)
 		{
 			// Can be used for cleanup.
 			return Task.CompletedTask;
 		}
-	}
+    }
 
 	[Serializable]
 	public class CommonResponsesDialog : IDialog<object>

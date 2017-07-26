@@ -15,11 +15,13 @@ namespace XamUBot.Dialogs
 	public class TeamDialog : BaseDialog
 	{
 		IList<TeamResponse> _teamList;
+        private string _lastResponse = "";
+        private int _lastResponseCount = 0;
 
-		protected async override Task OnInitializeAsync(IDialogContext context)
+        protected async override Task OnInitializeAsync(IDialogContext context)
 		{
-			await context.PostAsync("What would you like to know about our team?");
-			_teamList = await ApiManager.Instance.GetTeamAsync();
+			await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.TeamWelcome));
+			_teamList = await ApiManagerFactory.Instance.GetTeamAsync();
 		}
 
 		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
