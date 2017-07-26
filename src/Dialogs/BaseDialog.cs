@@ -4,6 +4,9 @@ using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Microsoft.Cognitive.LUIS;
+using System.Configuration;
+using System.Linq;
 
 namespace XamUBot.Dialogs
 {
@@ -170,6 +173,44 @@ namespace XamUBot.Dialogs
 		protected virtual Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
 		{
 			return Task.FromResult(true);
+		}
+
+		protected async Task<LuisResult> PredictLuisAsync(string message, string intentPrefix = null)
+		{
+			if(string.IsNullOrWhiteSpace(message))
+			{
+				return null;
+			}
+
+			// Reference:
+			// https://github.com/Microsoft/Cognitive-LUIS-Windows
+
+			// TODO: Move config settings to web.config
+			var lc = new LuisClient(
+				appId: "e9412ee5-9529-42fa-bc5f-ae25069e3b40",
+				appKey: "4f7be0062bdc4ccc91240323a99992dc") ;
+
+			var luisResult = await lc.Predict(message);
+			
+			if (intentPrefix != null)
+			{
+				// Remove all intents not matching the prefix.
+				luisResult.Intents = luisResult.Intents
+					.Where(i => i.Name.StartsWith(intentPrefix, StringComparison.OrdinalIgnoreCase))
+					.OrderByDescending(i => i.Score)
+					.ToArray();
+			}
+			else
+			{
+				luisResult.Intents = luisResult.Intents
+					.OrderByDescending(i => i.Score)
+					.ToArray();
+			}
+
+			// Update the top scoring intent because we have potentially removed the original intent.
+			luisResult.TopScoringIntent = luisResult.Intents.FirstOrDefault();
+
+			return luisResult;
 		}
 		
 	}
