@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.Collections.Generic;
 using System.Web.Hosting;
 
-namespace XamUBot.Utternaces
+namespace XamUBot.Utterances
 {
 
-    public static class Keywords
+	public static class Keywords
     {
         public const string Exit = "exit";
         public const string Leave = "leave";
@@ -35,19 +32,10 @@ namespace XamUBot.Utternaces
         }
 
 
-        public static bool IsHelpKeyword(string keyword)
-        {
-            return (keyword.Contains(Help) || keyword.Contains(Support));
-        }
+		public static bool IsHelpKeyword(string keyword) => keyword.ToLowerInvariant() == Help || keyword.ToLowerInvariant() == Support;
 
-        public static bool IsExitKeyword(string keyword)
-        {
-            return (keyword.Contains(Exit) || keyword.Contains(Leave));
-        }
+		public static bool IsExitKeyword(string keyword) => keyword.ToLowerInvariant() == Exit || keyword.ToLowerInvariant() == Leave;
 
-        public static bool IsSwearWord(string keyword)
-        {
-            return (_censor.HasCensoredWord(keyword));
-        }
+		public static bool IsSwearWord(string keyword) => _censor.HasCensoredWord(keyword);
     }
 }

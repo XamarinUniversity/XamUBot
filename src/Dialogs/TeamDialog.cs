@@ -15,22 +15,32 @@ namespace XamUBot.Dialogs
 	public class TeamDialog : BaseDialog
 	{
 		IList<TeamResponse> _teamList;
-        private string _lastResponse = "";
-        private int _lastResponseCount = 0;
 
-        protected async override Task OnInitializeAsync(IDialogContext context)
+        protected async override Task<bool> OnInitializeAsync(IDialogContext context)
 		{
 			await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.TeamWelcome));
 			_teamList = await ApiManagerFactory.Instance.GetTeamAsync();
+			return true;
 		}
 
-		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
+		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
 		{
 			var result = await PredictLuisAsync(activity.Text, LuisConstants.IntentPrefix_Team);
-			if (result?.Intents?.Length <= 0)
+
+			// Handle if we don't have an answer.
+			if (result?.TopScoringIntent == null)
 			{
-				await context.PostAsync("Sorry, I did not understand this. Are you looking for a team member or a specialist on a certain topic?");
-				return true;
+				// Let the base dialog check if we haven't been able to povide an answer multiple times.
+				if (await HandleInputNotUnderstoodAsync(context, repetitions >= 2 ? ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RepetitiveAnswer) : null)) 
+				{
+					// Base got us covered and offered a picker with options.
+					return false;
+				}
+				else
+				{
+					await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.NotUnderstood));
+					return true;
+				}
 			}
 			else
 			{
@@ -57,7 +67,7 @@ namespace XamUBot.Dialogs
 
 					case LuisConstants.Intent_ShowTeamMember:
 						// The intent contains the technology the user is looking for.
-						var personEntity = result.GetBestMatchingEntity(LuisConstants.Entity_Person);
+						var personEntity = result.GetBestMatchingEntity(LuisConstants.Entity_Trainer);
 
 						await context.PostAsync($"I'm looking for team members named '{personEntity.Name}'");
 

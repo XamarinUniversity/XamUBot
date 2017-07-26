@@ -14,3 +14,6 @@ Repeat|We seem to be repeating ourselves, type help if you require assistance
 Repeat|Albert Einstein said "The definition of insanity is doing the same thing over and over again and expecting different results". Let me know if you require some assistance by typing help.
 TeamWelcome|We have a great team here at Xamarin University, who do you want to know about? 
 TeamWelcome|What would you like to know? Remember, you can always say 'help' if you are lost
+SupportWelcome|Are you looking for help? You've come to the right place.
+RepetitiveAnswer|You have already said this...are you looking for support? Just type 'help'.
+NotUnderstood|Sorry, I did not get what you mean.

@@ -16,7 +16,10 @@ namespace XamUBot
             Repeat,
             TeamWelcome,
             RootPrompt,
-        }
+			SupportWelcome,
+			RepetitiveAnswer,
+			NotUnderstood,
+		}
 
         private static Dictionary<string, List<string>> utterances = new Dictionary<string, List<string>>();
         private static Random rnd = new Random();

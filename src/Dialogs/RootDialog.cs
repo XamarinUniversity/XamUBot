@@ -10,20 +10,19 @@ namespace XamUBot.Dialogs
 	[Serializable]
 	public class RootDialog : BaseDialog
 	{
-        bool firstVisit = true;
-		enum PickerIds
+		bool _firstVisit = true;
+
+		protected async override Task<bool> OnInitializeAsync(IDialogContext context)
 		{
-			Topic
+			await base.OnInitializeAsync(context);
+			await ShowTopics(context);
+			return false;
 		}
 
-		enum DialogIds
+		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
 		{
-			TeamDialog,
-			TracksDialog,
-		}
-
-		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
-		{
+			return true;
+			/*
 			switch (activity.Type)
 			{
 				case ActivityTypes.Message:
@@ -33,56 +32,60 @@ namespace XamUBot.Dialogs
 				default:
 					return true;
 			}
+			*/
 		}
-		
+
 		async Task ShowTopics(IDialogContext context)
 		{
-            if (firstVisit)
-            {
-                await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
-                firstVisit = false;
-            }
-            ShowPicker(context, (int)PickerIds.Topic, ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), new[] { "Team", "Tracks", "Test LUIS", "QandA" });
+			if (_firstVisit)
+			{
+				await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
+				_firstVisit = false;
+			}
+			ShowPicker(context, (int)PickerIds.MainTopic, ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), new[] { "Team", "Tracks", "QandA", "Support" });
 		}
 
 		protected async override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
 		{
+			if (selectedChoice == null)
+			{
+				// User exceeded maximum retries and always provided a value that's not part of the picker.
+				await context.PostAsync("Looks like we have a small communication problem. If you need support, please say 'help' or pick one of the available options.");
+				await ShowTopics(context);
+				// Never wait for incoming messages when presenting a picker.
+				return false;
+			}
+
+
 			await context.PostAsync("You selected '" + selectedChoice + "'...");
 
-			if (pickerId == (int)PickerIds.Topic)
+			if (pickerId == (int)PickerIds.MainTopic)
 			{
 				if (selectedChoice.ToLowerInvariant().Contains("tracks"))
 				{
-					context.Call(new TracksDialog(), null);
+					GoToDialog(context, (int)DialogIds.TracksDialog, new TracksDialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("team"))
 				{
-					//context.Call(new TeamDialog(), null);
-					GoToDialog(context,(int)DialogIds.TeamDialog, new TeamDialog());
-				}
-				else if (selectedChoice.ToLowerInvariant().Contains("test luis"))
-				{
-					context.Call(new TestLuisDialog(), null);
+					GoToDialog(context, (int)DialogIds.TeamDialog, new TeamDialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("qanda"))
 				{
-					context.Call(new TestQandADialog(), null);
+					GoToDialog(context, (int)DialogIds.QandADialog, new QandADialog());
 				}
+				else if (selectedChoice.ToLowerInvariant().Contains("support"))
+				{
+					GoToDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
+				}
+			}
 
-				return false;
-			}
-			else
-			{
-				await context.PostAsync($"Unfortunately I cannot help you with that.");
-				ShowTopics(context);
-				return true;
-			}
+			// We're navigating to a new dialog, so don't wait for next message.
+			return false;
 		}
 
 		protected async override Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
 		{
-			await context.PostAsync("Returning from " + (DialogIds)dialogId);
-			return true;
+			return await base.OnGetDialogReturnValueAsync(context, dialogId, result);
 		}
 	}
 }

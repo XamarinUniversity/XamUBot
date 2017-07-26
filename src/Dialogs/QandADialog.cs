@@ -13,7 +13,7 @@ namespace XamUBot.Dialogs
 {
 	[Serializable]
 	[QnAMakerService("b2b027cd86564a9b9fbaa1b14ca5f86f", "89c441bd-9b04-429e-a862-f1ea4ffa48b7")]
-	public class TestQandADialog : QnAMakerDialog<object>
+	public class QandADialog : QnAMakerDialog<object>
 	{
 		public override async Task NoMatchHandler(IDialogContext context, string originalQueryText)
 		{
@@ -24,7 +24,7 @@ namespace XamUBot.Dialogs
 		[QnAMakerResponseHandler(50)]
 		public async Task LowScoreHandler(IDialogContext context, string originalQueryText, QnAMakerResult result)
 		{
-			await context.PostAsync($"I found an answer that might help...{result.Answer}.");
+			await context.PostAsync($"Maybe this is what you are looking for...{result.Answer}.");
 			context.Wait(MessageReceived);
 		}
 

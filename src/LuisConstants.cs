@@ -13,6 +13,6 @@ namespace XamUBot
 		public const string Intent_ShowEntireTeam = "[Team] Show entire team";
 
 		public const string Entity_Technology = "technology";
-		public const string Entity_Person = "person";
+		public const string Entity_Trainer = "trainer";
 	}
 }
