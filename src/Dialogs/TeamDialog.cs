@@ -26,92 +26,84 @@ namespace XamUBot.Dialogs
 
 		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
-            var keyword = activity.Text.ToLowerInvariant();
-
-            // check if the user is repeating themselves
-            //if (keyword == _lastResponse)
-            //{
-            //    _lastResponseCount++;
-            //    if (_lastResponseCount > 3)
-            //        await context.PostAsync(ResponseUtterances.GetRandomResponse("Repeat"));
-            //}
-            //else
-            //{
-            //    _lastResponse = keyword;
-            //    _lastResponseCount = 0;
-            //}
-
-			// Presort list.
-			IEnumerable<TeamResponse> teamMembers = _teamList
-				.OrderBy(m => m.Name);
-
-			// Show all members or filter.
-			if (!keyword.Contains("all")
-				&& !keyword.Contains("team")
-				&& !keyword.Contains("every")
-				&& !keyword.Contains("complete"))
+			var result = await PredictLuisAsync(activity.Text, LuisConstants.IntentPrefix_Team);
+			if (result?.Intents?.Length <= 0)
 			{
-				// Filter content unless all team members have been requested.
-				teamMembers = teamMembers
-					.Where(
-						m => m.Name.ToLowerInvariant().Contains(keyword)
-						|| m.Email.ToLowerInvariant().Contains(keyword)
-						|| m.Description.ToLowerInvariant().Contains(keyword)
-						|| m.Title.ToLowerInvariant().Contains(keyword)
-						|| m.TwitterUrl.ToLowerInvariant().Contains(keyword)
-						|| m.Website.ToLowerInvariant().Contains(keyword));
-			}
-
-			var finalMembers = teamMembers.ToList();
-
-			// Reply with a beautiful hero card!
-			var reply = activity.CreateReply();
-
-			if (finalMembers.Count > 0)
-			{
-                await context.PostAsync("Look what I found for you:");
-
-				foreach (var person in finalMembers)
-				{
-					reply.AttachHeroCard(person.Name, person.Description, person.HeadshotUrl, person.ShortDescription, new Tuple<string, string>[] {
-						new Tuple<string, string>("Twitter", person.TwitterHandle),
-						new Tuple<string, string>("Email", person.Email)
-					});
-				}
-
-				if (finalMembers.Count > 1)
-				{
-					reply.AttachmentLayout = "carousel";
-				}
+				await context.PostAsync("Sorry, I did not understand this. Are you looking for a team member or a specialist on a certain topic?");
+				return true;
 			}
 			else
 			{
-				reply.AttachHeroCard(
+				// Reply with a beautiful hero card.
+				var reply = activity.CreateReply();
+
+				// Presort list.
+				IEnumerable<TeamResponse> teamMembers = _teamList
+					.OrderBy(m => m.Name);
+				
+				switch (result.TopScoringIntent.Name)
+				{
+					case LuisConstants.Intent_GetSpecialist:
+						// The intent contains the technology the user is looking for.
+						var technologyEntity = result.GetBestMatchingEntity(LuisConstants.Entity_Technology);
+
+						await context.PostAsync($"Let me find some team members who know about '{technologyEntity.Name}'");
+
+						teamMembers = teamMembers
+							.Where(m =>
+							   m.Description.ToLowerInvariant().Contains(technologyEntity.Name.ToLowerInvariant())
+							   || m.Title.ToLowerInvariant().Contains(technologyEntity.Name.ToLowerInvariant()));
+						break;
+
+					case LuisConstants.Intent_ShowTeamMember:
+						// The intent contains the technology the user is looking for.
+						var personEntity = result.GetBestMatchingEntity(LuisConstants.Entity_Person);
+
+						await context.PostAsync($"I'm looking for team members named '{personEntity.Name}'");
+
+						teamMembers = teamMembers
+							.Where(m =>
+							   m.Name.ToLowerInvariant().Contains(personEntity.Name.ToLowerInvariant())
+							   || m.Email.ToLowerInvariant().Contains(personEntity.Name.ToLowerInvariant()));
+						break;
+
+					case LuisConstants.Intent_ShowEntireTeam:
+						// No further filtering.
+						await context.PostAsync("Here's the entire team!");
+						break;
+				}
+
+				var finalMembers = teamMembers.ToList();
+
+				if (finalMembers.Count > 0)
+				{
+					foreach (var person in finalMembers)
+					{
+						reply.AttachHeroCard(person.Name, person.Description, person.HeadshotUrl, person.ShortDescription, new Tuple<string, string>[] {
+							new Tuple<string, string>("Twitter", person.TwitterHandle),
+							new Tuple<string, string>("Email", person.Email)
+						});
+					}
+
+					if (finalMembers.Count > 1)
+					{
+						reply.AttachmentLayout = "carousel";
+					}
+				}
+				else
+				{
+					reply.AttachHeroCard(
 					"Hello, is it me you're looking for?",
 					"Sorry, I couldn't find who you were looking for. Are you looking for a team member? Just tell me the name of the team member or provide any other keyword.",
 					@"http://i.imgur.com/QsIsjo8.jpg");
+				}
+
+				await context.PostAsync(reply);
 			}
 
-			await context.PostAsync(reply);
 
-			//await context.PostAsync("Is there anything else you would like to know about the team?");
-
-			SendPicker(context, 1, "Is there anything else you would like to know about the team?");
-
-			return false;
-		}
-
-		protected override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
-		{
-			if(selectedChoice == BaseDialog.ChoiceNo)
-			{
-				context.Done("Returning from team");
-				return Task.FromResult(false);
-			}
-			else
-			{
-				return Task.FromResult(true);
-			}
+			await context.PostAsync("Anything else you'd like to know about the team?");
+			return true;
 		}
 	}
 }
