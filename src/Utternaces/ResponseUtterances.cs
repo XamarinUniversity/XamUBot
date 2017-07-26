@@ -13,7 +13,9 @@ namespace XamUBot
             Welcome,
             Hello,
             Swear,
-            Repeat
+            Repeat,
+            TeamWelcome,
+            RootPrompt,
         }
 
         private static Dictionary<string, List<string>> utterances = new Dictionary<string, List<string>>();
@@ -36,12 +38,12 @@ namespace XamUBot
             }
         }
 
-        public static string GetRandomResponse(ReplyTypes responseType)
+        public static string GetResponse(ReplyTypes responseType)
         {
-            return GetRandomResponse(responseType.ToString());
+            return GetResponse(responseType.ToString());
         }
 
-        public static string GetRandomResponse(string responseType)
+        public static string GetResponse(string responseType)
         {
             int index = rnd.Next(utterances[responseType].Count);
             string randomString = utterances[responseType][index];

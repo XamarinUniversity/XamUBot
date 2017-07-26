@@ -20,7 +20,7 @@ namespace XamUBot.Dialogs
 
         protected async override Task OnInitializeAsync(IDialogContext context)
 		{
-			await context.PostAsync("What would you like to know about our teams?");
+			await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.TeamWelcome));
 			_teamList = await ApiManagerFactory.Instance.GetTeamAsync();
 		}
 

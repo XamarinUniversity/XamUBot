@@ -106,7 +106,7 @@ namespace XamUBot.Dialogs
                     await _task.PollAsync(token);
                     break;
                 case Keywords.Swear:
-                    var response = ResponseUtterances.GetRandomResponse("Swear");
+                    var response = ResponseUtterances.GetResponse("Swear");
                     var reply = new CommonResponsesDialog(response);
                     var interup = reply.Void<object, IMessageActivity>();
                     _task.Call(interup, null);

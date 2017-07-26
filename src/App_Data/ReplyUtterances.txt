@@ -1,5 +1,9 @@
-﻿Welcome|Hi I'm the Xamarin University Chatbot
-Welcome|G'day I'm the Xamarin Univesity Bot
+﻿Welcome|Welcome to the Xamarin University Bot. I can help you out with a bunch of different stuff. Here are some things I can help you with.
+Welcome|G'day I'm the Xamarin University Monkey.  I might be a monkey, but I can also help you out with various things. What interests you?
+RootPrompt|Here are some things I can help you out with.
+RootPrompt|What interests you?
+RootPrompt|What takes your fancy?
+RootPrompt|What would you like to find out about?
 Hello|G'day
 Hello|Hi
 Hello|Hello
@@ -8,3 +12,5 @@ Swear|No need for bad langauge
 Swear|Good Gracious
 Repeat|We seem to be repeating ourselves, type help if you require assistance
 Repeat|Albert Einstein said "The definition of insanity is doing the same thing over and over again and expecting different results". Let me know if you require some assistance by typing help.
+TeamWelcome|We have a great team here at Xamarin University, who do you want to know about? 
+TeamWelcome|What would you like to know? Remember, you can always say 'help' if you are lost

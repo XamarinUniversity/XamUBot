@@ -10,6 +10,7 @@ namespace XamUBot.Dialogs
 	[Serializable]
 	public class RootDialog : BaseDialog
 	{
+        bool firstVisit = true;
 		enum PickerIds
 		{
 			Topic
@@ -27,17 +28,21 @@ namespace XamUBot.Dialogs
 			{
 				case ActivityTypes.Message:
 				case ActivityTypes.ConversationUpdate:
-					ShowTopics(context);
+					await ShowTopics(context);
 					return false;
-				
 				default:
 					return true;
 			}
 		}
 		
-		void ShowTopics(IDialogContext context)
+		async Task ShowTopics(IDialogContext context)
 		{
-			ShowPicker(context, (int)PickerIds.Topic, "What would you like to know? Note: you can always say 'help' if you are lost.", new[] { "Team", "Tracks", "Test LUIS", "QandA" });
+            if (firstVisit)
+            {
+                await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
+                firstVisit = false;
+            }
+            ShowPicker(context, (int)PickerIds.Topic, ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), new[] { "Team", "Tracks", "Test LUIS", "QandA" });
 		}
 
 		protected async override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
