@@ -138,7 +138,7 @@
     <Compile Include="Dialogs\DialogExtensions.cs" />
     <Compile Include="Dialogs\DialogIds.cs" />
     <Compile Include="Dialogs\PickerIds.cs" />
-    <Compile Include="Dialogs\RootPromptDialog.cs" />
+    <Compile Include="Dialogs\CustomPromptDialog.cs" />
     <Compile Include="Dialogs\SupportDialog.cs" />
     <Compile Include="Dialogs\QandADialog.cs" />
     <Compile Include="Dialogs\TeamDialog.cs" />

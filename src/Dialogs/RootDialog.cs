@@ -37,6 +37,8 @@ namespace XamUBot.Dialogs
 				await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
 				_firstVisit = false;
 			}
+
+			// Workaround for an issue in bot framework that prevents using a picker when starting the conversation.
 			var rootPickerDialog = new CustomPromptDialog(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), "Team", "QandA", "Support");
 			PushDialog(context, (int)DialogIds.RootPickerDialog, rootPickerDialog);
 		}
