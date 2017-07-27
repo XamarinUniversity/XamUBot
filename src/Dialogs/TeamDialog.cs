@@ -5,6 +5,8 @@ using Microsoft.Bot.Connector;
 using XamUApi;
 using System.Collections.Generic;
 using System.Linq;
+using QnAMakerDialog;
+using System.Threading;
 
 namespace XamUBot.Dialogs
 {
@@ -23,7 +25,13 @@ namespace XamUBot.Dialogs
 			return true;
 		}
 
-		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
+        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions)
+        {
+            await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.TeamHelp));
+            return true;
+        }
+
+        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
 		{
 			var result = await PredictLuisAsync(activity.Text, LuisConstants.IntentPrefix_Team);
 
@@ -38,9 +46,13 @@ namespace XamUBot.Dialogs
 				}
 				else
 				{
-					await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.NotUnderstood));
-					return true;
-				}
+                    // forward to qanda dialog
+                    var qnadialog = new QandADialog();
+                    var messageToForward = activity;
+                    await context.Forward(qnadialog, AfterQNADialog, messageToForward, CancellationToken.None);
+//                    await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.NotUnderstood));
+                    return false;
+                }
 			}
 			else
 			{
@@ -115,5 +127,18 @@ namespace XamUBot.Dialogs
 			await context.PostAsync("Anything else you'd like to know about the team?");
 			return true;
 		}
-	}
+
+        private async Task AfterQNADialog(IDialogContext context, IAwaitable<object> result)
+        {
+            //var answerFound = await result;
+
+            //// we might want to send a message or take some action if no answer was found (false returned)
+            //if (!answerFound)
+            //{
+            //    await context.PostAsync("I’m not sure what you want.");
+            //}
+
+            context.Wait(OnInnerMessageReceivedAsync);
+        }
+    }
 }

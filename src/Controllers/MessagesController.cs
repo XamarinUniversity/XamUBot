@@ -13,13 +13,13 @@ namespace XamUBot
 	[RoutePrefix("api/messages")]
 	public class MessagesController : ApiController
 	{
-		// Information below is stored in web.config.
-		// Name: XamUBot
-		// App ID: 9b28fa4b-173d-43b7-9987-c69081d618cb
-		// Password: mRjMmFfbH7Hc8ynQeZQ37u9
+        // Information below is stored in web.config.
+        // Name: XamUBot
+        // App ID: 9b28fa4b-173d-43b7-9987-c69081d618cb
+        // Password: mRjMmFfbH7Hc8ynQeZQ37u9
 
-		// Azure: http://xamubot.azurewebsites.net
-		// Webchat preview: https://webchat.botframework.com/embed/xamubot?s=tya7B3F_yuE.cwA.tvs.A-sDDf4THvHgmlVZRZh1oBuBVkAvCDcobHRD5eEEZvw
+        // Azure: http://xamubot.azurewebsites.net
+        // Webchat preview: https://webchat.botframework.com/embed/xamubot?s=tya7B3F_yuE.cwA.tvs.A-sDDf4THvHgmlVZRZh1oBuBVkAvCDcobHRD5eEEZvw
 
 
 		/// <summary>
@@ -35,7 +35,7 @@ namespace XamUBot
 				return BadRequest("No activity provided.");
 			}
 
-			// TODO: shows typing indicator even if the bot won't send an answer. The typing indicator should automagically appear if sending a reply takes longer.
+            // TODO: shows typing indicator even if the bot won't send an answer. The typing indicator should automagically appear if sending a reply takes longer.
             // show typing indicator - because bots type too :)
             if (activity.Type == ActivityTypes.Message)
             {
@@ -45,7 +45,7 @@ namespace XamUBot
                 await connector.Conversations.ReplyToActivityAsync(isTypingReply);
             }
 
-			/*
+            /*
 			if(activity.Type == ActivityTypes.ConversationUpdate)
 			{
 				IConversationUpdateActivity update = activity;
@@ -60,7 +60,7 @@ namespace XamUBot
 			}
 			*/
 
-			await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
 
 			return Ok();
 		}

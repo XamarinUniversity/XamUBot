@@ -53,10 +53,10 @@ namespace XamUBot.Dialogs
                 // but this way we can pick up the entered message later when handling it.
                 return Task.FromResult(Keywords.Exit);
             }
-            else if (Keywords.IsHelpKeyword(keyword))
-            {
-                return Task.FromResult(Keywords.Help);
-            }
+            //else if (Keywords.IsHelpKeyword(keyword))
+            //{
+            //    return Task.FromResult(Keywords.Help);
+            //}
             else if (Keywords.IsSwearWord(keyword))
                 return Task.FromResult(Keywords.Swear);
            

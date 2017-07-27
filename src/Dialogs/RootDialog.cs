@@ -19,7 +19,13 @@ namespace XamUBot.Dialogs
 			return false;
 		}
 
-		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
+        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions)
+        {
+//            await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootHelp));
+            return false;
+        }
+
+        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
 		{
 			return true;
 			/*
@@ -42,8 +48,8 @@ namespace XamUBot.Dialogs
 				await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
 				_firstVisit = false;
 			}
-			ShowPicker(context, (int)PickerIds.MainTopic, ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), new[] { "Team", "Tracks", "QandA", "Support" });
-		}
+            ShowPicker(context, (int)PickerIds.MainTopic, ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), new[] { "Team", "Tracks", "QandA", "Help" });
+        }
 
 		protected async override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
 		{
@@ -57,33 +63,42 @@ namespace XamUBot.Dialogs
 			}
 
 
-			await context.PostAsync("You selected '" + selectedChoice + "'...");
+			//await context.PostAsync("You selected '" + selectedChoice + "'...");
 
 			if (pickerId == (int)PickerIds.MainTopic)
 			{
 				if (selectedChoice.ToLowerInvariant().Contains("tracks"))
 				{
-					GoToDialog(context, (int)DialogIds.TracksDialog, new TracksDialog());
+                    await context.PostAsync("Great, let's talk about the classes and tracks available at Xamarin University.");
+                    GoToDialog(context, (int)DialogIds.TracksDialog, new TracksDialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("team"))
 				{
-					GoToDialog(context, (int)DialogIds.TeamDialog, new TeamDialog());
+                    await context.PostAsync("Super, let's talk about the awesome team at Xamarin University");
+                    GoToDialog(context, (int)DialogIds.TeamDialog, new TeamDialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("qanda"))
 				{
-					GoToDialog(context, (int)DialogIds.QandADialog, new QandADialog());
+                    await context.PostAsync("Cool, you want to check out our questions and answers.");
+                    GoToDialog(context, (int)DialogIds.QandADialog, new QandADialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("support"))
 				{
 					GoToDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
 				}
-			}
+                else if (selectedChoice.ToLowerInvariant().Contains("help"))
+                {
+                    await OnHelpReceivedAsync(context, null, 0);
+//                    GoToDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
+                }
+            }
 
-			// We're navigating to a new dialog, so don't wait for next message.
-			return false;
+            // We're navigating to a new dialog, so don't wait for next message.
+            return false;
 		}
 
-		protected async override Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
+
+        protected async override Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
 		{
 			return await base.OnGetDialogReturnValueAsync(context, dialogId, result);
 		}
