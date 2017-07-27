@@ -63,19 +63,19 @@ namespace XamUBot.Dialogs
 			{
 				if (selectedChoice.ToLowerInvariant().Contains("tracks"))
 				{
-					GoToDialog(context, (int)DialogIds.TracksDialog, new TracksDialog());
+					PushDialog(context, (int)DialogIds.TracksDialog, new TracksDialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("team"))
 				{
-					GoToDialog(context, (int)DialogIds.TeamDialog, new TeamDialog());
+					PushDialog(context, (int)DialogIds.TeamDialog, new TeamDialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("qanda"))
 				{
-					GoToDialog(context, (int)DialogIds.QandADialog, new QandADialog());
+					PushDialog(context, (int)DialogIds.QandADialog, new QandADialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("support"))
 				{
-					GoToDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
+					PushDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
 				}
 			}
 
