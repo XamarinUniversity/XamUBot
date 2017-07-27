@@ -11,34 +11,23 @@ namespace XamUBot.Dialogs
 	public class RootDialog : BaseDialog
 	{
 		bool _firstVisit = true;
-
-		protected async override Task<bool> OnInitializeAsync(IDialogContext context)
-		{
-			await base.OnInitializeAsync(context);
-			await ShowTopics(context);
-			return false;
-		}
-
+				
 		protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions)
 		{
-			//            await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootHelp));
-			return false;
+			await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootHelp));
+			return true;
 		}
 
 		protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
 		{
-			return true;
-			/*
 			switch (activity.Type)
 			{
-				case ActivityTypes.Message:
 				case ActivityTypes.ConversationUpdate:
 					await ShowTopics(context);
 					return false;
 				default:
 					return true;
 			}
-			*/
 		}
 
 		async Task ShowTopics(IDialogContext context)
@@ -48,7 +37,8 @@ namespace XamUBot.Dialogs
 				await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
 				_firstVisit = false;
 			}
-			ShowPicker(context, (int)PickerIds.MainTopic, ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), new[] { "Team", "QandA", "Support" });
+			var rootPickerDialog = new CustomPromptDialog(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt), "Team", "QandA", "Support");
+			PushDialog(context, (int)DialogIds.RootPickerDialog, rootPickerDialog);
 		}
 
 		protected async override Task<bool> OnPickerSelectedAsync(IDialogContext context, int pickerId, string selectedChoice)
@@ -88,7 +78,15 @@ namespace XamUBot.Dialogs
 
 		protected async override Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
 		{
-			return await base.OnGetDialogReturnValueAsync(context, dialogId, result);
+			await base.OnGetDialogReturnValueAsync(context, dialogId, result);
+
+			if(dialogId == (int)DialogIds.RootPickerDialog)
+			{
+				await OnPickerSelectedAsync(context, (int)PickerIds.MainTopic, (string)result);
+				return false;
+			}
+
+			return true;
 		}
 	}
 }
