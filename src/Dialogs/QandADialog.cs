@@ -15,11 +15,26 @@ namespace XamUBot.Dialogs
 	[QnAMakerService("b2b027cd86564a9b9fbaa1b14ca5f86f", "89c441bd-9b04-429e-a862-f1ea4ffa48b7")]
 	public class QandADialog : QnAMakerDialog<object>
 	{
-        bool shouldReturnImmediately;
-        public QandADialog(bool shouldReturnImmediately = false)
+		/// <summary>
+		/// Creates a new instance of the dialog
+		/// </summary>
+		/// <param name="returnImmediately">use TRUE to make the dialog return to the calling dialog without waiting for any other messages</param>
+        public QandADialog(bool returnImmediately = false)
         {
+			_returnImmediately = returnImmediately;
+		}
 
-        }
+		bool _returnImmediately;
+
+		protected async override Task MessageReceived(IDialogContext context, IAwaitable<IMessageActivity> item)
+		{
+			if(_returnImmediately)
+			{
+				context.Done("");
+			}
+			base.MessageReceived(context, item);
+		}
+
 		public override async Task NoMatchHandler(IDialogContext context, string originalQueryText)
 		{
 			await context.PostAsync($"Sorry, I couldn't find an answer for '{originalQueryText}'.");

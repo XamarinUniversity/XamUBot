@@ -46,11 +46,7 @@ namespace XamUBot.Dialogs
 				}
 				else
 				{
-                    // forward to qanda dialog
-                    var qnadialog = new QandADialog();
-                    var messageToForward = activity;
-                    await context.Forward(qnadialog, AfterQNADialog, messageToForward, CancellationToken.None);
-//                    await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.NotUnderstood));
+                    await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.NotUnderstood));
                     return false;
                 }
 			}
@@ -127,18 +123,5 @@ namespace XamUBot.Dialogs
 			await context.PostAsync("Anything else you'd like to know about the team?");
 			return true;
 		}
-
-        private async Task AfterQNADialog(IDialogContext context, IAwaitable<object> result)
-        {
-            //var answerFound = await result;
-
-            //// we might want to send a message or take some action if no answer was found (false returned)
-            //if (!answerFound)
-            //{
-            //    await context.PostAsync("I’m not sure what you want.");
-            //}
-
-            context.Wait(OnInnerMessageReceivedAsync);
-        }
     }
 }

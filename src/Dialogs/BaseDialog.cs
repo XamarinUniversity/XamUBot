@@ -48,7 +48,7 @@ namespace XamUBot.Dialogs
 			}
 		}
 
-		protected async Task OnInnerMessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+		async Task OnInnerMessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
 		{
 			bool waitForNextMessage = true;
 
@@ -65,10 +65,14 @@ namespace XamUBot.Dialogs
 					_lastQuery = activity.Text?.Trim()?.ToLowerInvariant();
 				}
 
-                if (Keywords.IsHelpKeyword(activity.Text))
-                    waitForNextMessage = await OnHelpReceivedAsync(context, activity, _lastQueryRepetitions);
-                else
-                    waitForNextMessage = await OnMessageReceivedAsync(context, activity, _lastQueryRepetitions);
+				if (Keywords.IsHelpKeyword(activity.Text))
+				{
+					waitForNextMessage = await OnHelpReceivedAsync(context, activity, _lastQueryRepetitions);
+				}
+				else
+				{
+					waitForNextMessage = await OnMessageReceivedAsync(context, activity, _lastQueryRepetitions);
+				}
 			}
 
 			// Wait for next message.
@@ -98,7 +102,14 @@ namespace XamUBot.Dialogs
 		/// <returns>return TRUE if you want to wait for the next message, return FALSE if you are redirecting to another dialog or create a poll</returns>
 		protected abstract Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
 
-        protected abstract Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
+		/// <summary>
+		/// Gets called if the dialog detected that the user is seeking help.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="msgActivity"></param>
+		/// <param name="repetitions"></param>
+		/// <returns>return TRUE if you want to wait for the next message, return FALSE if you are redirecting to another dialog or create a poll</returns>
+		protected abstract Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
 
         /// <summary>
         /// Sends a picker with arbitrary choices to the client. Override OnChoiceMadeAsync to react to the result of the picker.
