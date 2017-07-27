@@ -196,7 +196,7 @@ namespace XamUBot.Dialogs
 						return false;
 
 					case NotUnderstood_PickerOption_GoToQandA:
-						GoToDialog(context, (int)DialogIds.QandADialog, new QandADialog());
+						PushDialog(context, (int)DialogIds.QandADialog, new QandADialog());
 						return false;
 
 					case NotUnderstood_PickerOption_KeepTrying:
@@ -214,16 +214,41 @@ namespace XamUBot.Dialogs
 			return true;
 		}
 
-        /// <summary>
-        /// Navigates to a different dialog. Optional return values can be picked up in OnGetDialogReturnValueAsync.
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="dialogId"></param>
-        /// <param name="dialog"></param>
-        protected void GoToDialog(IDialogContext context, int dialogId, IDialog<object> dialog)
+		/// <summary>
+		/// Navigates to a different dialog. Does not forward the current message to the next dialog but instead expects input form user
+		/// or needs the called dialog to proactively output something.
+		/// Optional return values can be picked up in OnGetDialogReturnValueAsync.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="dialogId"></param>
+		/// <param name="dialog"></param>
+		protected void PushDialog(IDialogContext context, int dialogId, IDialog<object> dialog)
 		{
 			_pendingDialogId = dialogId;
 			context.Call(dialog, OnInnerResumeDialogAsync);
+		}
+
+		/// <summary>
+		/// Navigates to a different dialog. Sends the current message to the next dialog which will then process it immediately.
+		/// Optional return values can be picked up in OnGetDialogReturnValueAsync.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="dialogId"></param>
+		/// <param name="dialog"></param>
+		protected void PushDialog(IDialogContext context, IMessageActivity messageActivity, int dialogId, IDialog<object> dialog)
+		{
+			_pendingDialogId = dialogId;
+			context.Forward(dialog, OnInnerResumeDialogAsync, messageActivity);
+		}
+
+		/// <summary>
+		/// Pops the current dialog of the stack and optionally sends a return value back to the previous dialog.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="returnValue"></param>
+		protected void PopDialog(IDialogContext context, object returnValue = null)
+		{
+			context.Done(returnValue);
 		}
 
 		/// <summary>
@@ -281,9 +306,23 @@ namespace XamUBot.Dialogs
 			// TODO: Move config settings to web.config
 			var lc = new LuisClient(
 				appId: "e9412ee5-9529-42fa-bc5f-ae25069e3b40",
+				// Bootstrap key: 4f7be0062bdc4ccc91240323a99992dc
 				appKey: "4f7be0062bdc4ccc91240323a99992dc") ;
 
-			var luisResult = await lc.Predict(message);
+			LuisResult luisResult = null;
+
+			try
+			{
+				luisResult = await lc.Predict(message);
+			}
+			catch (Exception ex)
+			{
+#if DEBUG
+				throw;
+#endif
+				Debug.WriteLine("Unable to contact LUIS: " + ex);
+				return null;
+			}
 			
 			if (intentPrefix != null)
 			{
@@ -355,7 +394,7 @@ namespace XamUBot.Dialogs
 		/// <param name="context"></param>
 		protected void PopToRootDialog(IDialogContext context)
 		{
-			context.Done(InternalMessage_PopToRoot);
+			PopDialog(context, InternalMessage_PopToRoot);
 		}
 
 		const string InternalMessage_PopToRoot = "InternalMessage_PopToRoot";

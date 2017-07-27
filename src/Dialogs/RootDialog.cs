@@ -69,8 +69,15 @@ namespace XamUBot.Dialogs
 			{
 				if (selectedChoice.ToLowerInvariant().Contains("tracks"))
 				{
-                    await context.PostAsync("Great, let's talk about the classes and tracks available at Xamarin University.");
-                    GoToDialog(context, (int)DialogIds.TracksDialog, new TracksDialog());
+					PushDialog(context, (int)DialogIds.TracksDialog, new TracksDialog());
+				}
+				else if (selectedChoice.ToLowerInvariant().Contains("team"))
+				{
+					PushDialog(context, (int)DialogIds.TeamDialog, new TeamDialog());
+				}
+				else if (selectedChoice.ToLowerInvariant().Contains("qanda"))
+				{
+					PushDialog(context, (int)DialogIds.QandADialog, new QandADialog());
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("team"))
 				{
@@ -84,17 +91,11 @@ namespace XamUBot.Dialogs
 				}
 				else if (selectedChoice.ToLowerInvariant().Contains("support"))
 				{
-					GoToDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
+					PushDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
 				}
-                else if (selectedChoice.ToLowerInvariant().Contains("help"))
-                {
-                    await OnHelpReceivedAsync(context, null, 0);
-//                    GoToDialog(context, (int)DialogIds.SupportDialog, new SupportDialog());
-                }
-            }
 
-            // We're navigating to a new dialog, so don't wait for next message.
-            return false;
+          // We're navigating to a new dialog, so don't wait for next message.
+         return false;
 		}
 
 
