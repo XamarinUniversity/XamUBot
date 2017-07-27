@@ -32,9 +32,9 @@ namespace XamUBot.Utterances
         }
 
 
-		public static bool IsHelpKeyword(string keyword) => keyword.ToLowerInvariant() == Help || keyword.ToLowerInvariant() == Support;
+		public static bool IsHelpKeyword(string keyword) => keyword?.ToLowerInvariant() == Help || keyword?.ToLowerInvariant() == Support;
 
-		public static bool IsExitKeyword(string keyword) => keyword.ToLowerInvariant() == Exit || keyword.ToLowerInvariant() == Leave;
+		public static bool IsExitKeyword(string keyword) => keyword?.ToLowerInvariant() == Exit || keyword?.ToLowerInvariant() == Leave;
 
 		public static bool IsSwearWord(string keyword) => _censor.HasCensoredWord(keyword);
     }

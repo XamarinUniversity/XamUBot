@@ -6,5 +6,6 @@
 		TracksDialog,
 		QandADialog,
 		SupportDialog,
+		RootPickerDialog,
 	}
 }

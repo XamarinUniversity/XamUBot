@@ -116,11 +116,13 @@ namespace XamUBot.Dialogs
         /// </summary>
         /// <param name="context"></param>
         /// <param name="title"></param>
+		/// <param name="pickerId"></param>
+		/// <param name="attempts"></param>
         /// <param name="buttons"></param>
-        protected void ShowPicker(IDialogContext context, int pickerId, string title, params string[] buttons)
+        protected void ShowPicker(IDialogContext context, int pickerId, string title, int attempts, params string[] buttons)
 		{
 			_pendingPickerId = pickerId;
-			var promptOptions = new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "", options: new List<string>(buttons), attempts: 2, promptStyler: null);
+			var promptOptions = new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "", options: new List<string>(buttons), attempts: attempts, promptStyler: null);
 			PromptDialog.Choice(context, OnInnerPickerSelectedAsync, promptOptions);
 		}
 
@@ -135,7 +137,7 @@ namespace XamUBot.Dialogs
 		protected void ShowPicker(IDialogContext context, int pickerId, string title)
 		{
 			_pendingPickerId = pickerId;
-			var promptOptions = new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "", attempts: 2, promptStyler: null);
+			var promptOptions = new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "", attempts: 1, promptStyler: null);
 			PromptDialog.Confirm(context, OnInnerPickerSelectedAsync, promptOptions);
 		}
 
@@ -155,6 +157,12 @@ namespace XamUBot.Dialogs
 			}
 			catch (TooManyAttemptsException)
 			{
+			}
+
+			if(context.Activity.Type != ActivityTypes.Message)
+			{
+				//context.Wait(OnInnerMessageReceivedAsync);
+				return;
 			}
 
 			bool waitForNextMessage = await OnPickerSelectedAsync(context, _pendingPickerId, selectedItem as string);
@@ -392,6 +400,7 @@ namespace XamUBot.Dialogs
 			ShowPicker(context,
 				(int)PickerIds.NotUnderstoodMultipleTimes,
 				"Sorry, I did not understand. Are you looking for somehing else?",
+				2,
 				NotUnderstood_PickerOption_BackToMain, NotUnderstood_PickerOption_GoToQandA, NotUnderstood_PickerOption_KeepTrying);
 		}
 
