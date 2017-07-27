@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using Microsoft.Cognitive.LUIS;
 using System.Configuration;
 using System.Linq;
+using XamUBot.Utterances;
 
 namespace XamUBot.Dialogs
 {
@@ -47,7 +48,7 @@ namespace XamUBot.Dialogs
 			}
 		}
 
-		async Task OnInnerMessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
+		protected async Task OnInnerMessageReceivedAsync(IDialogContext context, IAwaitable<object> result)
 		{
 			bool waitForNextMessage = true;
 
@@ -64,7 +65,10 @@ namespace XamUBot.Dialogs
 					_lastQuery = activity.Text?.Trim()?.ToLowerInvariant();
 				}
 
-				waitForNextMessage = await OnMessageReceivedAsync(context, activity, _lastQueryRepetitions);
+                if (Keywords.IsHelpKeyword(activity.Text))
+                    waitForNextMessage = await OnHelpReceivedAsync(context, activity, _lastQueryRepetitions);
+                else
+                    waitForNextMessage = await OnMessageReceivedAsync(context, activity, _lastQueryRepetitions);
 			}
 
 			// Wait for next message.
@@ -94,13 +98,15 @@ namespace XamUBot.Dialogs
 		/// <returns>return TRUE if you want to wait for the next message, return FALSE if you are redirecting to another dialog or create a poll</returns>
 		protected abstract Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
 
-		/// <summary>
-		/// Sends a picker with arbitrary choices to the client. Override OnChoiceMadeAsync to react to the result of the picker.
-		/// </summary>
-		/// <param name="context"></param>
-		/// <param name="title"></param>
-		/// <param name="buttons"></param>
-		protected void ShowPicker(IDialogContext context, int pickerId, string title, params string[] buttons)
+        protected abstract Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
+
+        /// <summary>
+        /// Sends a picker with arbitrary choices to the client. Override OnChoiceMadeAsync to react to the result of the picker.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="title"></param>
+        /// <param name="buttons"></param>
+        protected void ShowPicker(IDialogContext context, int pickerId, string title, params string[] buttons)
 		{
 			_pendingPickerId = pickerId;
 			var promptOptions = new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "", options: new List<string>(buttons), attempts: 2, promptStyler: null);

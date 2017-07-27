@@ -19,6 +19,9 @@ namespace XamUBot
 			SupportWelcome,
 			RepetitiveAnswer,
 			NotUnderstood,
+            TeamHelp,
+            SupportHelp,
+            RootHelp
 		}
 
         private static Dictionary<string, List<string>> utterances = new Dictionary<string, List<string>>();
