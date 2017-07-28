@@ -9,14 +9,21 @@ namespace XamUBot.Dialogs
     /// Queries Q&A. Returns a boolean to indicate if something was found.
     /// </summary>
     [Serializable]
-    [QnAMakerService("732de060-547d-430b-ad75-a781ede77355", "0646d377dab54c62b894ba9427ab0e7f")]
+    [QnAMakerService("0646d377dab54c62b894ba9427ab0e7f", "732de060-547d-430b-ad75-a781ede77355")]
     public class QandADialog : QnAMakerDialog<object>
     {
+        /// <summary>
+        /// Default constructor (required)
+        /// </summary>
+        public QandADialog() : this(false)
+        {
+        }
+
         /// <summary>
         /// Creates a new instance of the dialog
         /// </summary>
         /// <param name="returnImmediately">use TRUE to make the dialog return to the calling dialog without waiting for any other messages</param>
-        public QandADialog(bool returnImmediately = false)
+        public QandADialog(bool returnImmediately)
         {
             _returnImmediately = returnImmediately;
         }

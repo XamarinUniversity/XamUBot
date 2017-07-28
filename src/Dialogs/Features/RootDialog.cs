@@ -18,6 +18,16 @@ namespace XamUBot.Dialogs
             { "Support", typeof(SupportDialog) }
         };
 
+        Dictionary<string, Type> AlternativeText = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "XamU", typeof(TeamDialog) },
+            { "QnA", typeof(QandADialog) },
+            { "Q&A", typeof(QandADialog) },
+            { "FAQ", typeof(QandADialog) },
+            { "Questions", typeof(QandADialog) },
+            { "Answers", typeof(QandADialog) }
+        };
+
         bool _firstVisit = true;
 
         const string WelcomeBackToMainMenu = "You're back to the main menu!";
@@ -74,12 +84,17 @@ namespace XamUBot.Dialogs
 
             // Forward to the proper dialog based on our mapping.
             Type dialogType;
-            if (MainMenuChoices.TryGetValue(selectedChoice, out dialogType))
+            if (MainMenuChoices.TryGetValue(selectedChoice, out dialogType)
+                || AlternativeText.TryGetValue(selectedChoice, out dialogType))
             {
-                var dialog = Activator.CreateInstance(dialogType) as BaseDialog;
+                var dialog = Activator.CreateInstance(dialogType) as IDialog<object>;
                 if (dialog != null)
                 {
                     await context.Forward(dialog, OnResumeDialog, null, CancellationToken.None);
+                }
+                else
+                {
+                    WaitForNextMessage(context);
                 }
             }
             else

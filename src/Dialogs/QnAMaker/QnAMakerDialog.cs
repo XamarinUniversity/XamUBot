@@ -81,7 +81,10 @@ namespace QnAMakerDialog
         protected virtual async Task MessageReceived(IDialogContext context, IAwaitable<IMessageActivity> item)
         {
             var message = await item;
-            await HandleMessage(context, message.Text);
+            if (message != null)
+            {
+                await HandleMessage(context, message.Text);
+            }
             WaitOrExit(context);
         }
 

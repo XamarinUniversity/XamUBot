@@ -20,5 +20,5 @@ SupportWelcome|Are you looking for help? You've come to the right place.
 NotUnderstood|Sorry, I did not get what you mean.
 NotUnderstood|Hmmm, I'm having a bit of trouble understanding what you mean.
 TeamHelp|Always happy to help.  We are talking about the University Team, just type in one of the instructors names to get more information.  If you are finished talking about the team, you can 'exit', or if you are really stuck, you can contact 'support'
-SupportHelp|We want to do everything we can to help you out, if you need to contact a human, shoot an email to training@xamarin.com
-RootHelp|Let me know if you want to know about teams, tracks, QandA or support
+SupportHelp|We want to do everything we can to help you out, if you need to contact a human, shoot an email to mailto:training@xamarin.com
+RootHelp|Let me know if you want to know about teams, tracks, Q&A or support

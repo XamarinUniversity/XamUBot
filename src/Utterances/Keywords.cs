@@ -3,8 +3,10 @@ using System.Web.Hosting;
 
 namespace XamUBot.Utterances
 {
-
-	public static class Keywords
+    /// <summary>
+    /// Keywords for the bot.
+    /// </summary>
+    public static class Keywords
     {
         public const string Exit = "exit";
         public const string Leave = "leave";
@@ -32,10 +34,10 @@ namespace XamUBot.Utterances
         }
 
 
-		public static bool IsHelpKeyword(string keyword) => keyword?.ToLowerInvariant() == Help || keyword?.ToLowerInvariant() == Support;
+        public static bool IsHelpKeyword(string keyword) => keyword?.ToLowerInvariant() == Help;// || keyword?.ToLowerInvariant() == Support;
 
-		public static bool IsExitKeyword(string keyword) => keyword?.ToLowerInvariant() == Exit || keyword?.ToLowerInvariant() == Leave;
+        public static bool IsExitKeyword(string keyword) => keyword?.ToLowerInvariant() == Exit || keyword?.ToLowerInvariant() == Leave;
 
-		public static bool IsSwearWord(string keyword) => _censor.HasCensoredWord(keyword);
+        public static bool IsSwearWord(string keyword) => _censor.HasCensoredWord(keyword);
     }
 }
