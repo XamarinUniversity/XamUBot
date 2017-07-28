@@ -73,7 +73,8 @@ namespace XamUBot.Dialogs
             }
 
             // Forward to the proper dialog based on our mapping.
-            if (MainMenuChoices.TryGetValue(selectedChoice, out Type dialogType))
+            Type dialogType;
+            if (MainMenuChoices.TryGetValue(selectedChoice, out dialogType))
             {
                 var dialog = Activator.CreateInstance(dialogType) as BaseDialog;
                 if (dialog != null)
