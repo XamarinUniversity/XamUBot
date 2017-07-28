@@ -37,16 +37,15 @@ namespace XamUBot
 
             // TODO: shows typing indicator even if the bot won't send an answer. The typing indicator should automagically appear if sending a reply takes longer.
             // show typing indicator - because bots type too :)
-            if (activity.Type == ActivityTypes.Message)
-            {
-                var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
-                Activity isTypingReply = activity.CreateReply();
-                isTypingReply.Type = ActivityTypes.Typing;
-                await connector.Conversations.ReplyToActivityAsync(isTypingReply);
-            }
+            //if (activity.Type == ActivityTypes.Message)
+            //{
+            //    var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+            //    Activity isTypingReply = activity.CreateReply();
+            //    isTypingReply.Type = ActivityTypes.Typing;
+            //    await connector.Conversations.ReplyToActivityAsync(isTypingReply);
+            //}
 
-            /*
-			if(activity.Type == ActivityTypes.ConversationUpdate)
+            if(activity.Type == ActivityTypes.ConversationUpdate)
 			{
 				IConversationUpdateActivity update = activity;
 				
@@ -58,9 +57,8 @@ namespace XamUBot
 					return Ok();
 				}
 			}
-			*/
 
-                await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+            await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
 
 			return Ok();
 		}

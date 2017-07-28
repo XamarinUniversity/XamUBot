@@ -17,7 +17,6 @@ namespace XamUBot
             TeamWelcome,
             RootPrompt,
 			SupportWelcome,
-			RepetitiveAnswer,
 			NotUnderstood,
             TeamHelp,
             SupportHelp,

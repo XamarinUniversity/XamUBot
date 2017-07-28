@@ -25,30 +25,37 @@ namespace XamUBot.Dialogs
 			return true;
 		}
 
-        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions)
-        {
+        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity)
+		{
             await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.TeamHelp));
             return true;
         }
 
-        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
+		bool _askedIfLookingForAnythingElse;
+
+        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
 			var result = await PredictLuisAsync(activity.Text, LuisConstants.IntentPrefix_Team);
+
+			// Check if the last output was about asking the user if there's anything else.
+			if(_askedIfLookingForAnythingElse)
+			{
+				_askedIfLookingForAnythingElse = false;
+				if(activity.Text.Trim().ToLowerInvariant() == "no"
+					|| activity.Text.Trim().ToLowerInvariant() == "done")
+				{
+					await context.PostAsync("Alright, what else should we talk about?");
+					PopDialog(context);
+					return false;
+				}
+			}
 
 			// Handle if we don't have an answer.
 			if (result?.TopScoringIntent == null)
 			{
-				// Let the base dialog check if we haven't been able to povide an answer multiple times.
-				if (await HandleInputNotUnderstoodAsync(context, repetitions >= 2 ? ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RepetitiveAnswer) : null)) 
-				{
-					// Base got us covered and offered a picker with options.
-					return false;
-				}
-				else
-				{
-                    await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.NotUnderstood));
-                    return false;
-                }
+				// Check Q&A.
+				PushDialog(context, activity, (int)DialogIds.QandADialog, new QandADialog(returnImmediately: true));
+				return false;
 			}
 			else
 			{
@@ -120,8 +127,27 @@ namespace XamUBot.Dialogs
 			}
 
 
+			_askedIfLookingForAnythingElse = true;
 			await context.PostAsync("Anything else you'd like to know about the team?");
 			return true;
 		}
-    }
+
+		protected async override Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
+		{
+			await base.OnGetDialogReturnValueAsync(context, dialogId, result);
+
+			if (dialogId == (int)DialogIds.QandADialog)
+			{
+				// If we are coming back from Q&A, check if a result was provided.
+				bool foundAnswer = (bool)result;
+				if (!foundAnswer)
+				{
+					await ShowDefaultNotUnderstoodPicker(context, "Our FAQs don't seem to contain anything about your inquiry");
+					return false;
+				}
+			}
+
+			return true;
+		}
+	}
 }

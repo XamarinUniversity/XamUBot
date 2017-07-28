@@ -8,6 +8,7 @@ using Microsoft.Cognitive.LUIS;
 using System.Configuration;
 using System.Linq;
 using XamUBot.Utterances;
+using System.Threading;
 
 namespace XamUBot.Dialogs
 {
@@ -31,14 +32,6 @@ namespace XamUBot.Dialogs
 		int _pendingDialogId;
 		int _pendingPickerId;
 
-		// Contains the last query (incoming message of the user)
-		string _lastQuery;
-		// Keeps track how many times the same query came in.
-		int _lastQueryRepetitions = 0;
-
-		// Keeps track how many times teh bot did not know an answer.
-		int _notUnderstoodCounter = 0;
-
 		public async Task StartAsync(IDialogContext context)
 		{
 			var waitForMessage = await OnInitializeAsync(context);
@@ -55,23 +48,13 @@ namespace XamUBot.Dialogs
 			var activity = await result as Activity;
 			if (activity != null)
 			{
-				if (activity.Text?.Trim().ToLowerInvariant() == _lastQuery)
-				{
-					_lastQueryRepetitions++;
-				}
-				else
-				{
-					_lastQueryRepetitions = 0;
-					_lastQuery = activity.Text?.Trim()?.ToLowerInvariant();
-				}
-
 				if (Keywords.IsHelpKeyword(activity.Text))
 				{
-					waitForNextMessage = await OnHelpReceivedAsync(context, activity, _lastQueryRepetitions);
+					waitForNextMessage = await OnHelpReceivedAsync(context, activity);
 				}
 				else
 				{
-					waitForNextMessage = await OnMessageReceivedAsync(context, activity, _lastQueryRepetitions);
+					waitForNextMessage = await OnMessageReceivedAsync(context, activity);
 				}
 			}
 
@@ -98,18 +81,16 @@ namespace XamUBot.Dialogs
 		/// </summary>
 		/// <param name="context"></param>
 		/// <param name="msgActivity"></param>
-		/// <param name="repetitions">indicates how often the same message has been sent before by the user</param>
 		/// <returns>return TRUE if you want to wait for the next message, return FALSE if you are redirecting to another dialog or create a poll</returns>
-		protected abstract Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
+		protected abstract Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity msgActivity);
 
 		/// <summary>
 		/// Gets called if the dialog detected that the user is seeking help.
 		/// </summary>
 		/// <param name="context"></param>
 		/// <param name="msgActivity"></param>
-		/// <param name="repetitions"></param>
 		/// <returns>return TRUE if you want to wait for the next message, return FALSE if you are redirecting to another dialog or create a poll</returns>
-		protected abstract Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions);
+		protected abstract Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity);
 
         /// <summary>
         /// Sends a picker with arbitrary choices to the client. Override OnChoiceMadeAsync to react to the result of the picker.
@@ -218,14 +199,11 @@ namespace XamUBot.Dialogs
 						PushDialog(context, (int)DialogIds.QandADialog, new QandADialog());
 						return false;
 
+					default:
 					case NotUnderstood_PickerOption_KeepTrying:
 						// Just wait for next message.
 						await context.PostAsync("Ok, let's try that again!");
-						return true;
-
-					default:
-						// In doubt: back to start.
-						PopToRootDialog(context);
+						await OnMessageReceivedAsync(context, (Activity)context.Activity);
 						return false;
 				}
 			}
@@ -257,7 +235,7 @@ namespace XamUBot.Dialogs
 		protected void PushDialog(IDialogContext context, IMessageActivity messageActivity, int dialogId, IDialog<object> dialog)
 		{
 			_pendingDialogId = dialogId;
-			context.Forward(dialog, OnInnerResumeDialogAsync, messageActivity);
+			context.Forward(dialog, OnInnerResumeDialogAsync, messageActivity, CancellationToken.None);
 		}
 
 		/// <summary>
@@ -279,7 +257,7 @@ namespace XamUBot.Dialogs
 		async Task OnInnerResumeDialogAsync(IDialogContext context, IAwaitable<object> result)
 		{
 			var actualResult = await result;
-			string internalReturnValue = (string)actualResult;
+			string internalReturnValue = actualResult as string;
 			if(internalReturnValue != null && internalReturnValue == InternalMessage_PopToRoot)
 			{
 				context.Done(internalReturnValue);
@@ -373,37 +351,20 @@ namespace XamUBot.Dialogs
 		/// <param name="context"></param>
 		/// <param name="optionalMessage"></param>
 		/// <returns></returns>
-		protected async Task<bool> HandleInputNotUnderstoodAsync(IDialogContext context, string optionalMessage = null)
+		protected async Task ShowDefaultNotUnderstoodPicker(IDialogContext context, string optionalMessage = null)
 		{
-			_notUnderstoodCounter++;
-			if(_notUnderstoodCounter >= 2)
+			if(!string.IsNullOrWhiteSpace(optionalMessage))
 			{
-				_notUnderstoodCounter = 0;
-				if(!string.IsNullOrWhiteSpace(optionalMessage))
-				{
-					await context.PostAsync(optionalMessage);
-				}
-				ShowDefaultNotUnderstoodPicker(context);
-				return true;
+				await context.PostAsync(optionalMessage);
 			}
 
-			return false;
-		}
-
-		/// <summary>
-		/// Shows the picker that is used if the bot does not understand input. It is used by <see cref="HandleInputNotUnderstoodAsync(IDialogContext, string)"/>
-		/// but you can also use it manually.
-		/// </summary>
-		/// <param name="context"></param>
-		protected void ShowDefaultNotUnderstoodPicker(IDialogContext context)
-		{
 			ShowPicker(context,
 				(int)PickerIds.NotUnderstoodMultipleTimes,
 				"Sorry, I did not understand. Are you looking for somehing else?",
-				2,
+				0,
 				NotUnderstood_PickerOption_BackToMain, NotUnderstood_PickerOption_GoToQandA, NotUnderstood_PickerOption_KeepTrying);
 		}
-
+		
 		const string NotUnderstood_PickerOption_BackToMain = "Show all options";
 		const string NotUnderstood_PickerOption_GoToQandA = "Check Q&A";
 		const string NotUnderstood_PickerOption_KeepTrying = "Stay here";

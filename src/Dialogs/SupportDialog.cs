@@ -20,14 +20,14 @@ namespace XamUBot.Dialogs
 			return true;
 		}
 
-        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity, int repetitions)
-        {
+        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity)
+		{
             await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.SupportHelp));
             return true;
         }
 
 
-        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity, int repetitions)
+        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
 			return true;
 		}
