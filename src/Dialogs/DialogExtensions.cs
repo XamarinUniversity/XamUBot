@@ -13,6 +13,35 @@ namespace XamUBot.Dialogs
 	public static class DialogExtensions
 	{
 		/// <summary>
+		/// Helper to get the actual value of an awaitable.
+		/// Handles the TooManyAttemptsException used by picker dialogs.
+		/// The method never fails and catches all exceptions. If the awaitable cannot be cast
+		/// to T, the return value is "default(T)".
+		/// </summary>
+		/// <typeparam name="T">expected type</typeparam>
+		/// <param name="awaitable">the awaitable</param>
+		/// <returns>the value or null if value cannot be retrieved</returns>
+		public async static Task<T> GetValueAsync<T>(this IAwaitable<object> awaitable)
+		{
+			T value = default(T);
+
+			try
+			{
+				value = (T)await awaitable;
+			}
+			catch (TooManyAttemptsException)
+			{
+				// Expected exception if user entered invalid answer too often.
+			}
+			catch(Exception ex)
+			{
+				Debug.WriteLine($"nameof(GetValueAsync) failed: {ex}.");
+			}
+
+			return value;
+		}
+
+		/// <summary>
 		/// Attaches a hero-card to a reply.
 		/// </summary>
 		/// <param name="activity"></param>

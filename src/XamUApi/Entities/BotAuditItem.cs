@@ -1,15 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace XamUApi
 {
-	/// <summary>
-	/// Keeps track of what questions have been asked.
-	/// </summary>
-	[Serializable]
+    /// <summary>
+    /// Keeps track of what questions have been asked.
+    /// </summary>
+    [Serializable]
 	public class BotAuditItem
 	{
 		/// <summary>
@@ -58,11 +54,13 @@ namespace XamUApi
 		/// </summary>
 		public int? UserId { get; set; }
 
+        /// <summary>
+        /// ToString override to provide reasonable text representation.
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return $"{TimestampUtc} - From: {SenderName} To: {RecipientName} - {Message}";
         }
     }
-
-    
 }
