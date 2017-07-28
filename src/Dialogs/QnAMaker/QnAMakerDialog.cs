@@ -59,7 +59,7 @@ namespace QnAMakerDialog
 			context.Wait(MessageReceived);
 		}
 
-		public virtual async Task StartAsync(IDialogContext context)
+		public virtual Task StartAsync(IDialogContext context)
 		{
 			var type = this.GetType();
 			var qNaServiceAttribute = type.GetCustomAttributes<QnAMakerServiceAttribute>().FirstOrDefault();
@@ -76,6 +76,8 @@ namespace QnAMakerDialog
 			}
 
 			WaitOrExit(context);
+
+            return Task.CompletedTask;
 		}
 
 		protected virtual async Task MessageReceived(IDialogContext context, IAwaitable<IMessageActivity> item)
@@ -114,7 +116,7 @@ namespace QnAMakerDialog
 			}
 		}
 
-		private async Task<QnAMakerResult> GetQnAMakerResponse(string query, string knowledgeBaseId, string subscriptionKey)
+		private Task<QnAMakerResult> GetQnAMakerResponse(string query, string knowledgeBaseId, string subscriptionKey)
 		{
 			string responseString = string.Empty;
 
@@ -145,7 +147,7 @@ namespace QnAMakerDialog
 			try
 			{
 				response = JsonConvert.DeserializeObject<QnAMakerResult>(responseString);
-				return response;
+				return Task.FromResult(response);
 			}
 			catch
 			{
@@ -161,7 +163,7 @@ namespace QnAMakerDialog
 			WaitOrExit(context);
 		}
 
-		public virtual async Task NoMatchHandler(IDialogContext context, string originalQueryText)
+		public virtual Task NoMatchHandler(IDialogContext context, string originalQueryText)
 		{
 			throw new Exception("Sorry, I cannot find an answer to your question.");
 		}

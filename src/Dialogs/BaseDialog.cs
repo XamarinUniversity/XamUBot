@@ -70,10 +70,10 @@ namespace XamUBot.Dialogs
 		/// This does nothing in the base class.
 		/// </summary>
 		/// <param name="context"></param>
-		protected async virtual Task<bool> OnInitializeAsync(IDialogContext context)
+		protected virtual Task<bool> OnInitializeAsync(IDialogContext context)
 		{
 			// Does nothing in base.
-			return true;
+			return Task.FromResult(true);
 		}
 
 		/// <summary>
@@ -315,13 +315,14 @@ namespace XamUBot.Dialogs
 			catch (Exception ex)
 			{
 #if DEBUG
-				throw;
+                Debug.WriteLine("Unable to contact LUIS: " + ex);
+                throw;
+#else
+                return null;
 #endif
-				Debug.WriteLine("Unable to contact LUIS: " + ex);
-				return null;
-			}
-			
-			if (intentPrefix != null)
+            }
+
+            if (intentPrefix != null)
 			{
 				// Remove all intents not matching the prefix.
 				luisResult.Intents = luisResult.Intents

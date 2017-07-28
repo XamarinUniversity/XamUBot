@@ -2,16 +2,13 @@
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
-using XamUApi;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace XamUBot.Dialogs
 {
-	/// <summary>
-	/// Provides support.
-	/// </summary>
-	[Serializable]
+    /// <summary>
+    /// Provides support.
+    /// </summary>
+    [Serializable]
 	public class SupportDialog : BaseDialog
 	{
 		protected async override Task<bool> OnInitializeAsync(IDialogContext context)
@@ -27,9 +24,9 @@ namespace XamUBot.Dialogs
         }
 
 
-        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
+        protected override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
-			return true;
+            return Task.FromResult(true);
 		}
 	}
 }

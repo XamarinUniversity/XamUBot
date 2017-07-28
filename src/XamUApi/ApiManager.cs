@@ -11,22 +11,29 @@ namespace XamUApi
 	/// </summary>
     public sealed class ApiManager : IApiManager
 	{
-		HttpClient _client = new HttpClient
-		{
-			BaseAddress = new Uri("https://university.xamarin.com/api/v2/"),
-			Timeout = TimeSpan.FromSeconds(30)
-		};
+        public const string ApiEndpoint = "https://university.xamarin.com/api/v2/";
+        HttpClient _client;
 
-		/// <summary>
-		/// Gets available tracks.
-		/// </summary>
-		/// <param name="filter">keyword to filter for. Can be NULL to return everything.</param>
-		/// <returns>List of tracks</returns>
-		public async Task<IList<Track>> GetTracksAsync(string filter = null)
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        public ApiManager()
+        {
+            _client = new HttpClient {
+                BaseAddress = new Uri(ApiEndpoint),
+                Timeout = TimeSpan.FromSeconds(30)
+            };
+        }
+
+        /// <summary>
+        /// Gets available tracks.
+        /// </summary>
+        /// <param name="filter">keyword to filter for. Can be NULL to return everything.</param>
+        /// <returns>List of tracks</returns>
+        public async Task<IList<Track>> GetTracksAsync(string filter = null)
 		{
 			var json = await _client.GetStringAsync(string.IsNullOrWhiteSpace(filter) ? "tracks" : $"tracks?Text={filter}");
-			var tracks = JsonConvert.DeserializeObject<List<Track>>(json);
-			return tracks;
+			return JsonConvert.DeserializeObject<List<Track>>(json);
 		}
 
 		/// <summary>
@@ -36,19 +43,19 @@ namespace XamUApi
 		public async Task<IList<TeamResponse>> GetTeamAsync()
 		{
 			var json = await _client.GetStringAsync("teams");
-			var team = JsonConvert.DeserializeObject<List<TeamResponse>>(json);
-			return team;
+			return JsonConvert.DeserializeObject<List<TeamResponse>>(json);
 		}
 
-		public async Task<BotAuditItem> SaveAuditAsync(BotAuditItem auditItem)
+        /// <summary>
+        /// Save the audit trail
+        /// </summary>
+        /// <param name="auditItem"></param>
+        /// <returns></returns>
+		public Task<BotAuditItem> SaveAuditAsync(BotAuditItem auditItem)
 		{
-			if(auditItem == null)
-			{
-				return null;
-			}
-
-			return auditItem;
-		}
-
+            return (auditItem != null) 
+                ? Task.FromResult(auditItem) 
+                : null;
+        }
 	}
 }
