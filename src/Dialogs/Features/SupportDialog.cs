@@ -14,22 +14,22 @@ namespace XamUBot.Dialogs
 	[Serializable]
 	public class SupportDialog : BaseDialog
 	{
-		protected async override Task<bool> OnInitializeAsync(IDialogContext context)
+		protected async override Task OnInitializeAsync(IDialogContext context)
 		{
 			await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.SupportWelcome));
-			return true;
+			WaitForNextMessage(context);
 		}
 
-        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity)
+        protected async override Task OnHelpReceivedAsync(IDialogContext context, Activity msgActivity)
 		{
             await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.SupportHelp));
-            return true;
-        }
+			WaitForNextMessage(context);
+		}
 
 
-        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
+        protected async override Task OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
-			return true;
+			WaitForNextMessage(context);
 		}
 	}
 }

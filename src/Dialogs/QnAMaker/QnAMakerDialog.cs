@@ -75,13 +75,14 @@ namespace QnAMakerDialog
 				throw new Exception("Valid KnowledgeBaseId and SubscriptionKey not provided. Use QnAMakerServiceAttribute or set fields on QnAMakerDialog");
 			}
 
-			WaitOrExit(context);
+			context.Wait(MessageReceived);
 		}
 
 		protected virtual async Task MessageReceived(IDialogContext context, IAwaitable<IMessageActivity> item)
 		{
 			var message = await item;
 			await HandleMessage(context, message.Text);
+			WaitOrExit(context);
 		}
 
 		private async Task HandleMessage(IDialogContext context, string queryText)

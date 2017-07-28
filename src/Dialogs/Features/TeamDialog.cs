@@ -18,48 +18,48 @@ namespace XamUBot.Dialogs
 	{
 		IList<TeamResponse> _teamList;
 
-        protected async override Task<bool> OnInitializeAsync(IDialogContext context)
+        protected async override Task OnInitializeAsync(IDialogContext context)
 		{
 			await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.TeamWelcome));
 			_teamList = await ApiManagerFactory.Instance.GetTeamAsync();
-			return true;
+			WaitForNextMessage(context);
 		}
 
-        protected async override Task<bool> OnHelpReceivedAsync(IDialogContext context, Activity msgActivity)
+        protected async override Task OnHelpReceivedAsync(IDialogContext context, Activity msgActivity)
 		{
             await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.TeamHelp));
-            return true;
-        }
+			WaitForNextMessage(context);
+		}
 
 		bool _askedIfLookingForAnythingElse;
 
-        protected async override Task<bool> OnMessageReceivedAsync(IDialogContext context, Activity activity)
+        protected async override Task OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
-			var result = await PredictLuisAsync(activity.Text, LuisConstants.IntentPrefix_Team);
+			var result = await LuisHelper.PredictLuisAsync(activity.Text, LuisConstants.IntentPrefix_Team);
 
 			// Check if the last output was about asking the user if there's anything else.
 			if(_askedIfLookingForAnythingElse)
 			{
 				_askedIfLookingForAnythingElse = false;
 				if(activity.Text.Trim().ToLowerInvariant() == "no"
-					|| activity.Text.Trim().ToLowerInvariant() == "done")
+					|| activity.Text.Trim().ToLowerInvariant() == "done"
+					|| activity.Text.Trim().ToLowerInvariant() == "nope")
 				{
 					await context.PostAsync("Alright, what else should we talk about?");
 					PopDialog(context);
-					return false;
+					return;
 				}
 			}
 
-			// Handle if we don't have an answer.
 			if (result?.TopScoringIntent == null)
 			{
-				// Check Q&A.
-				PushDialog(context, activity, (int)DialogIds.QandADialog, new QandADialog(returnImmediately: true));
-				return false;
+				// Check Q&A if we don't have an answer from LUIS.
+				await context.Forward(new QandADialog(returnImmediately: true), OnResumeAfterQandAChecked, activity, CancellationToken.None);
+				return;
 			}
 			else
 			{
-				// Reply with a beautiful hero card.
+				// We have an answer from LUIS!
 				var reply = activity.CreateReply();
 
 				// Presort list.
@@ -126,28 +126,26 @@ namespace XamUBot.Dialogs
 				await context.PostAsync(reply);
 			}
 
-
 			_askedIfLookingForAnythingElse = true;
 			await context.PostAsync("Anything else you'd like to know about the team?");
-			return true;
+
+			WaitForNextMessage(context);
 		}
 
-		protected async override Task<bool> OnGetDialogReturnValueAsync(IDialogContext context, int dialogId, object result)
+		async Task OnResumeAfterQandAChecked(IDialogContext context, IAwaitable<object> result)
 		{
-			await base.OnGetDialogReturnValueAsync(context, dialogId, result);
-
-			if (dialogId == (int)DialogIds.QandADialog)
+			bool foundAnswer = await result.GetValueAsync<bool>();
+			if (!foundAnswer)
 			{
-				// If we are coming back from Q&A, check if a result was provided.
-				bool foundAnswer = (bool)result;
-				if (!foundAnswer)
-				{
-					await ShowDefaultNotUnderstoodPicker(context, "Our FAQs don't seem to contain anything about your inquiry");
-					return false;
-				}
+				await ShowDefaultNotUnderstoodPicker(context, "Our FAQs don't seem to contain anything about your inquiry");
+				return;
+			}
+			else
+			{
+				await context.PostAsync("You might want to check out our FAQ: just type 'exit'.");
 			}
 
-			return true;
+			WaitForNextMessage(context);
 		}
 	}
 }
