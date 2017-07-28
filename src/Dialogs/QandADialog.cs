@@ -9,7 +9,7 @@ namespace XamUBot.Dialogs
 	/// Queries Q&A. Returns a boolean to indicate if something was found.
 	/// </summary>
 	[Serializable]
-	[QnAMakerService("b2b027cd86564a9b9fbaa1b14ca5f86f", "89c441bd-9b04-429e-a862-f1ea4ffa48b7")]
+	[QnAMakerService("732de060-547d-430b-ad75-a781ede77355", "0646d377dab54c62b894ba9427ab0e7f")]
 	public class QandADialog : QnAMakerDialog<object>
 	{
 		/// <summary>
