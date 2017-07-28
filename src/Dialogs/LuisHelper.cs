@@ -1,5 +1,6 @@
 ﻿using Microsoft.Cognitive.LUIS;
 using System;
+using System.Configuration;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -7,10 +8,20 @@ namespace XamUBot.Dialogs
 {
 	public static class LuisHelper
 	{
-		// LuisClient is using HttpClient and that is meant to be used as a single instance, so let's keep this static.
-		static LuisClient _luisClient = new LuisClient(
-				appId: "e9412ee5-9529-42fa-bc5f-ae25069e3b40",
-				appKey: "4f7be0062bdc4ccc91240323a99992dc");
+		static LuisClient _luisClient;
+
+        /// <summary>
+        /// Static constructor to initialize our LUIS client.
+        /// LuisClient is using HttpClient and that is meant to be used as a single instance, 
+        /// so let's keep this static.
+        /// </summary>
+        static LuisHelper()
+        {
+            var appId = ConfigurationManager.AppSettings["LuisClientAppId"];
+            var appKey = ConfigurationManager.AppSettings["LuisClientAppKey"];
+
+            _luisClient = new LuisClient(appId, appKey);
+        }
 
 		/// <summary>
 		/// Performs a call to LUIS to get back the best matching intent.
@@ -26,17 +37,15 @@ namespace XamUBot.Dialogs
 			{
 				return null;
 			}
+
 			LuisResult luisResult = null;
 
 			try
 			{
 				luisResult = await _luisClient.Predict(message);
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-#if DEBUG
-				throw;
-#endif
 				return null;
 			}
 

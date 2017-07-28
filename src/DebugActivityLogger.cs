@@ -1,32 +1,29 @@
 ﻿using Microsoft.Bot.Builder.History;
 using Microsoft.Bot.Connector;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 using XamUApi;
 
 namespace XamUBot
 {
     public class DebugActivityLogger : IActivityLogger
     {
-        public async Task LogAsync(IActivity activity)
+        public Task LogAsync(IActivity activity)
         {
-
-            var auditItem = new BotAuditItem();
-            auditItem.TimestampUtc = activity.Timestamp;
-            auditItem.SenderId = activity.From.Id;
-            auditItem.SenderName = activity.From.Name;
-            auditItem.RecipientId = activity.Recipient.Id;
-            auditItem.RecipientName = activity.Recipient.Name;
-            //auditItem.UserId = ??? -- no idea how to get user id
-            auditItem.ConversationId = activity.Conversation.Id;
-            auditItem.ReplyToId = activity.ReplyToId;
-            auditItem.MessageId = activity.Id;
-
+            var auditItem = new BotAuditItem()
+            {
+                TimestampUtc = activity.Timestamp,
+                SenderId = activity.From.Id,
+                SenderName = activity.From.Name,
+                RecipientId = activity.Recipient.Id,
+                RecipientName = activity.Recipient.Name,
+                //auditItem.UserId = ??? -- no idea how to get user id
+                ConversationId = activity.Conversation.Id,
+                ReplyToId = activity.ReplyToId,
+                MessageId = activity.Id
+            };
             StringBuilder message = new StringBuilder();
 
             // now try and fill in the message
@@ -60,9 +57,8 @@ namespace XamUBot
 
             Debug.WriteLine(auditItem);
             // maybe in a real one we would
-            //await ApiManagerFactory.Instance.SaveAuditAsync(auditItem);
+            //return ApiManagerFactory.Instance.SaveAuditAsync(auditItem);
+            return Task.CompletedTask;
         }
-
-
     }
 }

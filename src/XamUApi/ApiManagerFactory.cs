@@ -5,7 +5,7 @@ namespace XamUApi
 	/// <summary>
 	/// Creates an instance of IApiManager.
 	/// </summary>
-	public sealed class ApiManagerFactory
+	public static class ApiManagerFactory
 	{
 		static Lazy<IApiManager> _instance = new Lazy<IApiManager>(() => new ApiManager(), false);
 

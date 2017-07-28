@@ -2,88 +2,95 @@
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
-using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading;
+using System.Linq;
 
 namespace XamUBot.Dialogs
 {
-	[Serializable]
-	public class RootDialog : BaseDialog
-	{
-		bool _firstVisit = true;
-				
-		protected async override Task OnHelpReceivedAsync(IDialogContext context, Activity msgActivity)
-		{
-			await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootHelp));
-			WaitForNextMessage(context);
-		}
+    [Serializable]
+    public class RootDialog : BaseDialog
+    {
+        Dictionary<string, Type> MainMenuChoices = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "Team", typeof(TeamDialog) },
+            { "Q & A", typeof(QandADialog) },
+            { "Support", typeof(SupportDialog) }
+        };
 
-		protected async override Task OnMessageReceivedAsync(IDialogContext context, Activity activity)
-		{
-			switch (activity.Type)
-			{
-				case ActivityTypes.ConversationUpdate:
-					await ShowTopics(context);
-					break;
+        bool _firstVisit = true;
 
-				default:
-					WaitForNextMessage(context);
-					break;
-			}
-		}
+        const string WelcomeBackToMainMenu = "You're back to the main menu!";
+        const string DefaultHelpPrompt = "Looks like we have a small communication problem. If you need support, please say 'help' or pick one of the available options.";
 
-		async Task ShowTopics(IDialogContext context)
-		{
-			if (_firstVisit)
-			{
-				await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
-				_firstVisit = false;
-			}
+        protected async override Task OnHelpReceivedAsync(IDialogContext context, Activity activity)
+        {
+            await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootHelp));
+            WaitForNextMessage(context);
+        }
 
-			PromptDialog.Choice(
-				context,
-				OnMainMenuItemSelected,
-				CreateDefaultPromptOptions(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt),
-				0,
-				"Team", "QandA", "Support"));
-		}
+        protected async override Task OnMessageReceivedAsync(IDialogContext context, Activity activity)
+        {
+            switch (activity.Type)
+            {
+                case ActivityTypes.ConversationUpdate:
+                    await ShowTopics(context);
+                    break;
 
-		async Task OnMainMenuItemSelected(IDialogContext context, IAwaitable<object> result)
-		{
-			string selectedChoice = await result.GetValueAsync<string>();
+                default:
+                    WaitForNextMessage(context);
+                    break;
+            }
+        }
 
-			if (selectedChoice == null)
-			{
-				// User exceeded maximum retries and always provided a value that's not part of the picker.
-				// Show main menu picker again.
-				await context.PostAsync("Looks like we have a small communication problem. If you need support, please say 'help' or pick one of the available options.");
-				await ShowTopics(context);
-				return;
-			}
+        async Task ShowTopics(IDialogContext context)
+        {
+            if (_firstVisit)
+            {
+                await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
+                _firstVisit = false;
+            }
 
-			if (selectedChoice.ToLowerInvariant().Contains("team"))
-			{
-				await context.Forward(new TeamDialog(), OnResumeDialog, null, CancellationToken.None);
-			}
-			else if (selectedChoice.ToLowerInvariant().Contains("qanda"))
-			{
-				await context.Forward(new QandADialog(), OnResumeDialog, null, CancellationToken.None);
-			}
-			else if (selectedChoice.ToLowerInvariant().Contains("support"))
-			{
-				await context.Forward(new SupportDialog(), OnResumeDialog, null, CancellationToken.None);
-			}
-			else
-			{
-				WaitForNextMessage(context);
-			}
-		}
+            PromptDialog.Choice(
+                context,
+                OnMainMenuItemSelected,
+                CreateDefaultPromptOptions(
+                    ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt),
+                    0, MainMenuChoices.Keys.ToArray()));
+        }
 
-		async Task OnResumeDialog(IDialogContext context, IAwaitable<object> result)
-		{
-			await context.PostAsync("You're back to the main menu!");
-			await ShowTopics(context);
-		}
-	}
+        async Task OnMainMenuItemSelected(IDialogContext context, IAwaitable<object> result)
+        {
+            string selectedChoice = await result.GetValueAsync<string>();
+
+            if (selectedChoice == null)
+            {
+                // User exceeded maximum retries and always provided a value that's not part of the picker.
+                // Show main menu picker again.
+                await context.PostAsync(DefaultHelpPrompt);
+                await ShowTopics(context);
+                return;
+            }
+
+            // Forward to the proper dialog based on our mapping.
+            if (MainMenuChoices.TryGetValue(selectedChoice, out Type dialogType))
+            {
+                var dialog = Activator.CreateInstance(dialogType) as BaseDialog;
+                if (dialog != null)
+                {
+                    await context.Forward(dialog, OnResumeDialog, null, CancellationToken.None);
+                }
+            }
+            else
+            {
+                WaitForNextMessage(context);
+            }
+        }
+
+        async Task OnResumeDialog(IDialogContext context, IAwaitable<object> result)
+        {
+            await context.PostAsync(WelcomeBackToMainMenu);
+            await ShowTopics(context);
+        }
+    }
 }
