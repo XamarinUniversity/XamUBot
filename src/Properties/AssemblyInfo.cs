@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("XamUBot")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Xamarin University Support Bot Service")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("XamUBot")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
+[assembly: AssemblyCompany("Microsoft Corp.")]
+[assembly: AssemblyProduct("Xamarin University")]
+[assembly: AssemblyCopyright("Copyright ©  2017 Xamarin, Microsoft Corp.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
