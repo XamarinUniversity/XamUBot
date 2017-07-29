@@ -18,7 +18,7 @@ namespace XamUBot.Dialogs
             { "Support", typeof(SupportDialog) }
         };
 
-        Dictionary<string, Type> AlternativeText = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+        Dictionary<string, Type> AlternativeChoices = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
             { "XamU", typeof(TeamDialog) },
             { "QnA", typeof(QandADialog) },
@@ -28,14 +28,21 @@ namespace XamUBot.Dialogs
             { "Answers", typeof(QandADialog) }
         };
 
-        bool _firstVisit = true;
+        const string DefaultHelpPrompt = "Please select one of the following categories:";
 
-        const string WelcomeBackToMainMenu = "You're back to the main menu!";
-        const string DefaultHelpPrompt = "Looks like we have a small communication problem. If you need support, please say 'help' or pick one of the available options.";
+        protected override async Task OnInitializeAsync(IDialogContext context)
+        {
+            await context.PostAsync(ResponseUtterances.GetResponse(
+                ResponseUtterances.ReplyTypes.Welcome));
+
+            await base.OnInitializeAsync(context);
+        }
+
 
         protected async override Task OnHelpReceivedAsync(IDialogContext context, Activity activity)
         {
             await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootHelp));
+
             WaitForNextMessage(context);
         }
 
@@ -44,7 +51,11 @@ namespace XamUBot.Dialogs
             switch (activity.Type)
             {
                 case ActivityTypes.ConversationUpdate:
-                    await ShowTopics(context);
+                    await ShowTopicsAsync(context);
+                    break;
+
+                case ActivityTypes.Message:
+                    await CheckForKnownVerbAsync(context, activity);
                     break;
 
                 default:
@@ -53,60 +64,63 @@ namespace XamUBot.Dialogs
             }
         }
 
-        async Task ShowTopics(IDialogContext context)
+        private async Task CheckForKnownVerbAsync(IDialogContext context, Activity activity)
         {
-            if (_firstVisit)
-            {
-                await context.PostAsync(ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.Welcome));
-                _firstVisit = false;
-            }
-
-            PromptDialog.Choice(
-                context,
-                OnMainMenuItemSelected,
-                CreateDefaultPromptOptions(
-                    ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt),
-                    0, MainMenuChoices.Keys.ToArray()));
+            string message = activity.Text;
+            await ProcessResultAsync(context, message);
         }
 
-        async Task OnMainMenuItemSelected(IDialogContext context, IAwaitable<object> result)
+        private Task ShowTopicsAsync(IDialogContext context)
+        {
+            // Display a dialog box with choices.
+            FuzzyPromptDialog<string>.Choice(
+                context: context,
+                resume: OnMainMenuItemSelected,
+                promptOptions: FuzzyPromptOptions<string>.Create(
+                    prompt: ResponseUtterances.GetResponse(ResponseUtterances.ReplyTypes.RootPrompt),
+                    attempts: 0, 
+                    options: MainMenuChoices.Keys.ToArray(),
+                    validOptions: MainMenuChoices.Keys.Union(AlternativeChoices.Keys).ToArray()));
+
+            return Task.CompletedTask;
+        }
+
+        private async Task OnMainMenuItemSelected(IDialogContext context, IAwaitable<object> result)
         {
             string selectedChoice = await result.GetValueAsync<string>();
+            await ProcessResultAsync(context, selectedChoice);
+        }
 
-            if (selectedChoice == null)
+        private async Task ProcessResultAsync(IDialogContext context, string selectedChoice)
+        {
+            if (selectedChoice != null)
             {
-                // User exceeded maximum retries and always provided a value that's not part of the picker.
-                // Show main menu picker again.
-                await context.PostAsync(DefaultHelpPrompt);
-                await ShowTopics(context);
-                return;
-            }
-
-            // Forward to the proper dialog based on our mapping.
-            Type dialogType;
-            if (MainMenuChoices.TryGetValue(selectedChoice, out dialogType)
-                || AlternativeText.TryGetValue(selectedChoice, out dialogType))
-            {
-                var dialog = Activator.CreateInstance(dialogType) as IDialog<object>;
-                if (dialog != null)
+                // Forward to the proper dialog based on our mapping.
+                Type dialogType;
+                if (MainMenuChoices.TryGetValue(selectedChoice, out dialogType)
+                    || AlternativeChoices.TryGetValue(selectedChoice.Replace(" ", ""), out dialogType))
                 {
-                    await context.Forward(dialog, OnResumeDialog, null, CancellationToken.None);
-                }
-                else
-                {
-                    WaitForNextMessage(context);
+                    var dialog = Activator.CreateInstance(dialogType) as IDialog<object>;
+                    if (dialog != null)
+                    {
+                        // Move to the next dialog in the chain.
+                        await context.Forward(dialog, OnResumeDialog, null, CancellationToken.None);
+                        return;
+                    }
                 }
             }
-            else
-            {
-                WaitForNextMessage(context);
-            }
+
+            // User exceeded maximum retries and always provided a value 
+            // that's not part of the picker. Or used a cancel term.
+            // Show main menu picker again.
+            await context.PostAsync(DefaultHelpPrompt);
+            await ShowTopicsAsync(context);
+            //WaitForNextMessage(context);
         }
 
         async Task OnResumeDialog(IDialogContext context, IAwaitable<object> result)
         {
-            await context.PostAsync(WelcomeBackToMainMenu);
-            await ShowTopics(context);
+            await ShowTopicsAsync(context);
         }
     }
 }

@@ -1,11 +1,8 @@
-﻿using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Web.Http;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using System.Linq;
-using System;
 
 namespace XamUBot
 {
@@ -26,7 +23,8 @@ namespace XamUBot
                 return BadRequest("No activity provided.");
             }
 
-            // TODO: shows typing indicator even if the bot won't send an answer. The typing indicator should automagically appear if sending a reply takes longer.
+            // TODO: shows typing indicator even if the bot won't send an answer. 
+            // The typing indicator should automagically appear if sending a reply takes longer.
             // show typing indicator - because bots type too :)
             //if (activity.Type == ActivityTypes.Message)
             //{

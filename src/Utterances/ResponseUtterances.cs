@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Hosting;
 
 namespace XamUBot
@@ -20,8 +18,9 @@ namespace XamUBot
 			NotUnderstood,
             TeamHelp,
             SupportHelp,
-            RootHelp
-		}
+            RootHelp,
+            FAQWelcome
+        }
 
         private static Dictionary<string, List<string>> utterances = new Dictionary<string, List<string>>();
         private static Random rnd = new Random();

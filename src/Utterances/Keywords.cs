@@ -10,9 +10,12 @@ namespace XamUBot.Utterances
     {
         public const string Exit = "exit";
         public const string Leave = "leave";
+        public const string Menu = "menu";
+        public const string Back = "back";
         public const string Help = "help";
         public const string Support = "support";
         public const string Swear = "swear";
+        public const string Repeat = "repeatx3";
 
         static Censored.Censor _censor;
 
@@ -36,7 +39,7 @@ namespace XamUBot.Utterances
 
         public static bool IsHelpKeyword(string keyword) => keyword?.ToLowerInvariant() == Help;// || keyword?.ToLowerInvariant() == Support;
 
-        public static bool IsExitKeyword(string keyword) => keyword?.ToLowerInvariant() == Exit || keyword?.ToLowerInvariant() == Leave;
+        public static bool IsExitKeyword(string keyword) => keyword?.ToLowerInvariant() == Exit || keyword?.ToLowerInvariant() == Leave || keyword?.ToLowerInvariant() == Back || keyword?.ToLowerInvariant() == Menu;
 
         public static bool IsSwearWord(string keyword) => _censor.HasCensoredWord(keyword);
     }

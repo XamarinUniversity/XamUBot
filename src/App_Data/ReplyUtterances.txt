@@ -9,9 +9,10 @@ Hello|Hi
 Hello|Hello
 Hello|Howdy
 Swear|Well I never...
-Swear|No need for bad langauge
-Swear|Good Gracious
+Swear|No need for bad language
+Swear|Goodness gracious
 Swear|My goodness
+Swear|I'm a family friendly bot!
 Repeat|We seem to be repeating ourselves, type help if you require assistance
 Repeat|Albert Einstein said "The definition of insanity is doing the same thing over and over again and expecting different results". Let me know if you require some assistance by typing help.
 TeamWelcome|We have a great team here at Xamarin University, who do you want to know about? 
@@ -22,3 +23,6 @@ NotUnderstood|Hmmm, I'm having a bit of trouble understanding what you mean.
 TeamHelp|Always happy to help.  We are talking about the University Team, just type in one of the instructors names to get more information.  If you are finished talking about the team, you can 'exit', or if you are really stuck, you can contact 'support'
 SupportHelp|We want to do everything we can to help you out, if you need to contact a human, shoot an email to mailto:training@xamarin.com
 RootHelp|Let me know if you want to know about teams, tracks, Q&A or support
+FAQWelcome|What sort of problem are you having?
+FAQWelcome|What information are you looking for?
+FAQWelcome|What question are you trying to answer?

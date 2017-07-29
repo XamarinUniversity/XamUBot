@@ -134,6 +134,7 @@
     <Compile Include="Dialogs\BaseDialog.cs" />
     <Compile Include="Dialogs\DialogExtensions.cs" />
     <Compile Include="Dialogs\DialogIds.cs" />
+    <Compile Include="Dialogs\FuzzyPromptDialog.cs" />
     <Compile Include="Dialogs\LuisHelper.cs" />
     <Compile Include="Dialogs\PickerIds.cs" />
     <Compile Include="Dialogs\QnAMaker\QnAMakerDialog.cs" />

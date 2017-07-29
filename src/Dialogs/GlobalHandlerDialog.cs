@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs.Internals;
 using Microsoft.Bot.Builder.Dialogs;
 using XamUBot.Utterances;
+using System.Collections.Generic;
 
 namespace XamUBot.Dialogs
 {
@@ -24,6 +25,7 @@ namespace XamUBot.Dialogs
 	public class GlobalHandlerDialog : ScorableBase<IActivity, string, double>
 	{
 		readonly IDialogTask _task;
+        static List<string> trio = new List<string>(3);
 
 		// Apparently when this gets constructed, an IDialogTask instance is given to us.
 		// I do not understand yet, where this is coming from and what exactly it is...
@@ -45,7 +47,7 @@ namespace XamUBot.Dialogs
 				return Task.FromResult<string>(null);
 			}
 
-			var keyword = message.Text.ToLowerInvariant();
+			var keyword = message.Text.ToLowerInvariant().Trim();
 
             if (Keywords.IsExitKeyword(keyword))
             {
@@ -58,10 +60,20 @@ namespace XamUBot.Dialogs
             //    return Task.FromResult(Keywords.Help);
             //}
             else if (Keywords.IsSwearWord(keyword))
+            {
                 return Task.FromResult(Keywords.Swear);
-           
+            }
 
-			return Task.FromResult<string>(null);
+            // Look for repeats.
+            trio.Add(keyword);
+            if (trio.Count > 3)
+                trio.RemoveAt(0);
+            if (trio.Count == 3 && trio[0] == trio[1] && trio[1] == trio[2])
+            {
+                return Task.FromResult(Keywords.Repeat);
+            }
+
+            return Task.FromResult<string>(null);
 		}
 
 		protected override bool HasScore(IActivity item, string state)
@@ -75,10 +87,10 @@ namespace XamUBot.Dialogs
 
 		protected override double GetScore(IActivity item, string state)
 		{
-			// If we have a score to offer, it will be returned here.
-			// All contributors are sorted and the highest ranked scorable wins.
-			// For sake of simplicity, this returns 1 and thus always wins.
-			return 1f;
+            // If we have a score to offer, it will be returned here.
+            // All contributors are sorted and the highest ranked scorable wins.
+            // For sake of simplicity, this returns 1 and thus always wins.
+            return 1f;
 		}
 
 		protected async override Task PostAsync(IActivity item, string state, CancellationToken token)
@@ -94,21 +106,35 @@ namespace XamUBot.Dialogs
             {
                 case Keywords.Exit:
                     // React to exit request. Brings us back to the root dialog.
-                    _task.Reset(); break;
-                case Keywords.Help:
-                    var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
-
-                    // See: https://stackoverflow.com/questions/45282506/what-are-the-void-and-pollasync-methods-of-idialogtask-for/45283394#45283394
-                    var interruption = replyDialog.Void<object, IMessageActivity>();
-                    _task.Call(interruption, null);
-                    await _task.PollAsync(token);
+                    _task.Reset();
                     break;
+                case Keywords.Repeat:
+                    {
+                        var response = ResponseUtterances.GetResponse("Repeat");
+                        var reply = new CommonResponsesDialog(response);
+                        var interup = reply.Void<object, IMessageActivity>();
+                        _task.Call(interup, null);
+                        await _task.PollAsync(token);
+                        trio.Clear();
+                    }
+                    break;
+                    
+                //case Keywords.Help:
+                //    var replyDialog = new CommonResponsesDialog($"Sometimes I also feel **{state}**...");
+
+                //    // See: https://stackoverflow.com/questions/45282506/what-are-the-void-and-pollasync-methods-of-idialogtask-for/45283394#45283394
+                //    var interruption = replyDialog.Void<object, IMessageActivity>();
+                //    _task.Call(interruption, null);
+                //    await _task.PollAsync(token);
+                //    break;
                 case Keywords.Swear:
-                    var response = ResponseUtterances.GetResponse("Swear");
-                    var reply = new CommonResponsesDialog(response);
-                    var interup = reply.Void<object, IMessageActivity>();
-                    _task.Call(interup, null);
-                    await _task.PollAsync(token);
+                    {
+                        var response = ResponseUtterances.GetResponse("Swear");
+                        var reply = new CommonResponsesDialog(response);
+                        var interup = reply.Void<object, IMessageActivity>();
+                        _task.Call(interup, null);
+                        await _task.PollAsync(token);
+                    }
                     break;
                     
             }

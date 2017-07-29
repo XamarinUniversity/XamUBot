@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Connector;
 using QnAMakerDialog;
 
 namespace XamUBot.Dialogs
@@ -31,6 +32,23 @@ namespace XamUBot.Dialogs
         bool _returnImmediately;
         bool _foundResult;
 
+        public async override Task StartAsync(IDialogContext context)
+        {
+            if (!_returnImmediately)
+            {
+                await context.PostAsync(ResponseUtterances.GetResponse(
+                    ResponseUtterances.ReplyTypes.FAQWelcome));
+            }
+
+            await base.StartAsync(context);
+        }
+
+
+        protected override async Task MessageReceived(IDialogContext context, IAwaitable<IMessageActivity> item)
+        {
+            await base.MessageReceived(context, item);
+        }
+
         protected override void WaitOrExit(IDialogContext context)
         {
             if (_returnImmediately)
@@ -46,7 +64,8 @@ namespace XamUBot.Dialogs
         public override async Task NoMatchHandler(IDialogContext context, string originalQueryText)
         {
             _foundResult = false;
-            await context.PostAsync($"Sorry, I couldn't find an answer for '{originalQueryText}'.");
+            await context.PostAsync($"Sorry, I couldn't find an answer for '{originalQueryText}'." +
+                "\r\n\r\nYou can try another question, or type 'exit' to return to the main menu.");
         }
 
         [QnAMakerResponseHandler(100)]
@@ -68,7 +87,6 @@ namespace XamUBot.Dialogs
         public async Task LowScoreHandler(IDialogContext context, string originalQueryText, QnAMakerResult result)
         {
             _foundResult = true;
-
             await context.PostAsync($"I'm not exactly sure, but this might help.");
             await context.PostAsync($"{result.Answer}.");
         }

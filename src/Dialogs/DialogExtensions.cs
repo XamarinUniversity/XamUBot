@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.Bot.Builder.Dialogs;
-using XamUApi;
 using Microsoft.Cognitive.LUIS;
 
 namespace XamUBot.Dialogs
@@ -23,11 +22,9 @@ namespace XamUBot.Dialogs
 		/// <returns>the value or null if value cannot be retrieved</returns>
 		public async static Task<T> GetValueAsync<T>(this IAwaitable<object> awaitable)
 		{
-			T value = default(T);
-
 			try
 			{
-				value = (T)await awaitable;
+				return (T) await awaitable;
 			}
 			catch (TooManyAttemptsException)
 			{
@@ -38,7 +35,7 @@ namespace XamUBot.Dialogs
 				Debug.WriteLine($"nameof(GetValueAsync) failed: {ex}.");
 			}
 
-			return value;
+			return default(T);
 		}
 
 		/// <summary>

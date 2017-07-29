@@ -32,6 +32,22 @@ namespace XamUBot.Dialogs
         /// </summary>
         public const string ChoiceNo = "no";
 
+        public async Task StartAsync(IDialogContext context)
+        {
+            await OnInitializeAsync(context);
+        }
+
+        /// <summary>
+        /// Can be overridden to run one time initialization when the dialog is getting constructed.
+        /// This does nothing in the base class.
+        /// </summary>
+        /// <param name="context"></param>
+        protected virtual Task OnInitializeAsync(IDialogContext context)
+        {
+            WaitForNextMessage(context);
+            return Task.CompletedTask;
+        }
+
         /// <summary>
         /// Creates options for displaying a selection of options.
         /// </summary>
@@ -41,8 +57,13 @@ namespace XamUBot.Dialogs
         /// <returns></returns>
         protected static PromptOptions<string> CreateDefaultPromptOptions(string title, int numRetries, params string[] buttons)
         {
-            return new PromptOptions<string>(prompt: title, retry: "", tooManyAttempts: "",
-                options: new List<string>(buttons), attempts: numRetries, promptStyler: null);
+            return new PromptOptions<string>(
+                prompt: title, 
+                retry: title, 
+                tooManyAttempts: "",
+                options: new List<string>(buttons), 
+                attempts: numRetries, 
+                promptStyler: null);
         }
 
         /// <summary>
@@ -52,11 +73,6 @@ namespace XamUBot.Dialogs
         protected void WaitForNextMessage(IDialogContext context)
         {
             context.Wait(OnInnerMessageReceivedAsync);
-        }
-
-        public async Task StartAsync(IDialogContext context)
-        {
-            await OnInitializeAsync(context);
         }
 
         /// <summary>
@@ -79,19 +95,6 @@ namespace XamUBot.Dialogs
                     await OnMessageReceivedAsync(context, activity);
                 }
             }
-        }
-
-        /// <summary>
-        /// Can be overridden to run one time initialization when the dialog is getting constructed.
-        /// This does nothing in the base class.
-        /// </summary>
-        /// <param name="context"></param>
-        protected virtual Task OnInitializeAsync(IDialogContext context)
-        {
-            WaitForNextMessage(context);
-
-            // Does nothing in base.
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -138,7 +141,9 @@ namespace XamUBot.Dialogs
                 context,
                 OnNotUnderstoodSelected,
                 CreateDefaultPromptOptions(NotUnderstood_PickerTitle, 
-                        1, NotUnderstood_PickerOption_BackToMain, NotUnderstood_PickerOption_GoToQandA, NotUnderstood_PickerOption_KeepTrying));
+                        1, NotUnderstood_PickerOption_BackToMain, 
+                        NotUnderstood_PickerOption_GoToQandA, 
+                        NotUnderstood_PickerOption_KeepTrying));
 
         }
 
