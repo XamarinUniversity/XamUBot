@@ -66,8 +66,12 @@ namespace XamUBot.Dialogs
 
             // Look for repeats.
             trio.Add(keyword);
+
             if (trio.Count > 3)
+            {
                 trio.RemoveAt(0);
+            }
+
             if (trio.Count == 3 && trio[0] == trio[1] && trio[1] == trio[2])
             {
                 return Task.FromResult(Keywords.Repeat);

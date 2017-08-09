@@ -11,14 +11,16 @@ namespace XamUBot.Dialogs
     [Serializable]
     public class RootDialog : BaseDialog
     {
-        Dictionary<string, Type> MainMenuChoices = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+        [NonSerialized]
+        static Dictionary<string, Type> MainMenuChoices = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
             { "Team", typeof(TeamDialog) },
             { "Q & A", typeof(QandADialog) },
             { "Support", typeof(SupportDialog) }
         };
 
-        Dictionary<string, Type> AlternativeChoices = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
+        [NonSerialized]
+        static Dictionary<string, Type> AlternativeChoices = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
             { "XamU", typeof(TeamDialog) },
             { "QnA", typeof(QandADialog) },
@@ -115,11 +117,11 @@ namespace XamUBot.Dialogs
             // Show main menu picker again.
             await context.PostAsync(DefaultHelpPrompt);
             await ShowTopicsAsync(context);
-            //WaitForNextMessage(context);
         }
 
         async Task OnResumeDialog(IDialogContext context, IAwaitable<object> result)
         {
+            await context.PostAsync(DefaultHelpPrompt);
             await ShowTopicsAsync(context);
         }
     }

@@ -41,8 +41,17 @@ using System.Linq;
 using Microsoft.Bot.Builder.Internals.Fibers;
 using System.Text.RegularExpressions;
 
+
+
+
 namespace QnAMakerDialog
 {
+    /// <summary>
+    /// Slightly customized version of the original QnAMakerDialog (https://github.com/garypretty/botframework/tree/master/QnAMakerDialog)
+    /// This version allows to exit immediately instead of waiting for the next message to arrive. This allows the dialog to be called
+    /// as a child dialog, handle the request and return.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     [Serializable]
     public class QnAMakerDialog<T> : IDialog<T>
     {
