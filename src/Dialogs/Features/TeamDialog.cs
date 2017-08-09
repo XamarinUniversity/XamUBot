@@ -57,8 +57,7 @@ namespace XamUBot.Dialogs
 			{
 				// Check Q&A if we don't have an answer from LUIS. This will forward to the Q&A dialog and make it
 				// return immediately.
-				await context.PostAsync("I don't know a concrete answer to this but let me check our Q&A for you...");
-				await context.Forward(new QandADialog(interactiveMode: false), OnResumeAfterQandAChecked, activity, CancellationToken.None);
+				await CheckFaqAsync(context, activity);
 				return;
 			}
 
@@ -131,28 +130,6 @@ namespace XamUBot.Dialogs
 			_askedIfLookingForAnythingElse = true;
 			await context.PostAsync("Anything else you'd like to know about the team?");
 
-
-			WaitForNextMessage(context);
-		}
-
-		/// <summary>
-		/// Gets called if we checked the Q&A because the current dialog did not know an answer.
-		/// </summary>
-		/// <param name="context"></param>
-		/// <param name="result">contains the answer found by the Q&A dialog or NULL if nothing found</param>
-		/// <returns></returns>
-		async Task OnResumeAfterQandAChecked(IDialogContext context, IAwaitable<object> result)
-		{
-			string foundAnswer = await result.GetValueAsync<string>();
-			if (string.IsNullOrWhiteSpace(foundAnswer))
-			{
-				await ShowDefaultNotUnderstoodPicker(context, "Our FAQs don't seem to contain anything about your inquiry");
-				return;
-			}
-			else
-			{
-				await context.PostAsync($"This is what I found in the FAQs: {foundAnswer}.");
-			}
 
 			WaitForNextMessage(context);
 		}

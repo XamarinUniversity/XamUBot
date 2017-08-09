@@ -17,7 +17,6 @@ namespace XamUBot.Dialogs
         // TODO: move to string table.
         const string NotUnderstood_PickerTitle = "Sorry, I did not understand. Are you looking for somehing else?";
         const string NotUnderstood_PickerOption_BackToMain = "Show all options";
-        const string NotUnderstood_PickerOption_GoToQandA = "Check Q&A";
         const string NotUnderstood_PickerOption_KeepTrying = "Stay here";
 
         const string InternalMessage_PopToRoot = "InternalMessage_PopToRoot";
@@ -142,7 +141,6 @@ namespace XamUBot.Dialogs
                 OnNotUnderstoodSelected,
                 CreateDefaultPromptOptions(NotUnderstood_PickerTitle, 
                         1, NotUnderstood_PickerOption_BackToMain, 
-                        NotUnderstood_PickerOption_GoToQandA, 
                         NotUnderstood_PickerOption_KeepTrying));
 
         }
@@ -155,12 +153,7 @@ namespace XamUBot.Dialogs
                 case NotUnderstood_PickerOption_BackToMain:
                     PopToRootDialog(context);
                     break;
-
-                case NotUnderstood_PickerOption_GoToQandA:
-                    PopToRootDialog(context);
-                    await context.Forward(new QandADialog(), null, (IMessageActivity)context.Activity, CancellationToken.None);
-                    break;
-
+                
                 case NotUnderstood_PickerOption_KeepTrying:
                 default:
                     // Just wait for next message.
@@ -178,5 +171,40 @@ namespace XamUBot.Dialogs
         {
             PopDialog(context, InternalMessage_PopToRoot);
         }
-    }
+
+		/// <summary>
+		/// Helper to forward an activity to the Q&A dialog and make the dialog return immediately.
+		/// The answer found in the FAQs will be sent to the client or, if no answer was found, a
+		/// picker will be shown which lets the user decide whether they want to stay in the current dialog
+		/// or go back to theroot dialog.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="activity"></param>
+		/// <returns></returns>
+		protected async Task CheckFaqAsync(IDialogContext context, Activity activity)
+		{
+			await context.PostAsync("I don't know a concrete answer to this but let me check our Q&A for you...");
+			await context.Forward(new QandADialog(interactiveMode: false), OnResumeAfterQandAChecked, activity, CancellationToken.None);
+		}
+
+		/// <summary>
+		/// Gets called if we checked the Q&A because the current dialog did not know an answer.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="result">contains the answer found by the Q&A dialog or NULL if nothing found</param>
+		/// <returns></returns>
+		async Task OnResumeAfterQandAChecked(IDialogContext context, IAwaitable<object> result)
+		{
+			string foundAnswer = await result.GetValueAsync<string>();
+
+			if (string.IsNullOrWhiteSpace(foundAnswer))
+			{
+				await ShowDefaultNotUnderstoodPicker(context, "Our FAQs don't seem to contain anything about your inquiry");
+				return;
+			}
+
+			await context.PostAsync($"This is what I found in the FAQs: {foundAnswer}.");
+			WaitForNextMessage(context);
+		}
+	}
 }
