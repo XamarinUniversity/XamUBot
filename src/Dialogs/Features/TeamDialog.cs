@@ -47,7 +47,6 @@ namespace XamUBot.Dialogs
 					|| activity.Text.Trim().ToLowerInvariant() == "done"
 					|| activity.Text.Trim().ToLowerInvariant() == "nope")
 				{
-					await context.PostAsync("Alright, what else should we talk about?");
 					PopDialog(context);
 					return;
 				}

@@ -71,7 +71,7 @@ namespace XamUBot.Dialogs
 
         protected override bool TryParse(IMessageActivity message, out T result)
         {
-            if (PromptOptions.ValidOptions != null)
+            if (PromptOptions.ValidOptions != null && message?.Text != null)
             {
                 var entry = PromptOptions.ValidOptions.FirstOrDefault(term =>
                     string.Equals(term.ToString(), message.Text.Replace(" ", ""),

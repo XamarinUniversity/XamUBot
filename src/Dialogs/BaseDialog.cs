@@ -19,8 +19,6 @@ namespace XamUBot.Dialogs
         const string NotUnderstood_PickerOption_BackToMain = "Show all options";
         const string NotUnderstood_PickerOption_KeepTrying = "Stay here";
 
-        const string InternalMessage_PopToRoot = "InternalMessage_PopToRoot";
-
         /// <summary>
         /// "Yes" constant for a yes/no style dialog.
         /// </summary>
@@ -164,12 +162,13 @@ namespace XamUBot.Dialogs
         }
 
         /// <summary>
-        /// Pops to the root dialog.
+        /// Clears the stack and restarts with the root dialog.
+		/// Note: state will be lost! A new instance of the root dialog will be created.
         /// </summary>
         /// <param name="context"></param>
         protected void PopToRootDialog(IDialogContext context)
         {
-            PopDialog(context, InternalMessage_PopToRoot);
+			context.Reset();
         }
 
 		/// <summary>
