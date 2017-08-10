@@ -7,34 +7,37 @@ using QnAMakerDialog;
 namespace XamUBot.Dialogs
 {
     /// <summary>
-    /// Queries Q&A. Returns a boolean to indicate if something was found.
+    /// Queries Q&A. Returns a string containing the found answer (if any).
     /// </summary>
     [Serializable]
     [QnAMakerService("0646d377dab54c62b894ba9427ab0e7f", "732de060-547d-430b-ad75-a781ede77355")]
     public class QandADialog : QnAMakerDialog<object>
     {
         /// <summary>
-        /// Default constructor (required)
+        /// Default constructor (required). Starts the dialog in interactive mode.
         /// </summary>
-        public QandADialog() : this(false)
+        public QandADialog() : this(true)
         {
         }
 
         /// <summary>
         /// Creates a new instance of the dialog
         /// </summary>
-        /// <param name="returnImmediately">use TRUE to make the dialog return to the calling dialog without waiting for any other messages</param>
-        public QandADialog(bool returnImmediately)
+        /// <param name="interactiveMode">use TRUE to run the dialog and make it wait for incoming messages. Use FALSE if
+        /// you are calling the dialog just in order to get a result back for further processing.</param>
+        public QandADialog(bool interactiveMode)
         {
-            _returnImmediately = returnImmediately;
+            _interactivMode = interactiveMode;
         }
 
-        bool _returnImmediately;
-        bool _foundResult;
+        bool _interactivMode;
+
+        // Contains the result found in the FAQs.
+        string _foundResult;
 
         public async override Task StartAsync(IDialogContext context)
         {
-            if (!_returnImmediately)
+            if (_interactivMode)
             {
                 await context.PostAsync(ResponseUtterances.GetResponse(
                     ResponseUtterances.ReplyTypes.FAQWelcome));
@@ -51,44 +54,59 @@ namespace XamUBot.Dialogs
 
         protected override void WaitOrExit(IDialogContext context)
         {
-            if (_returnImmediately)
+            if (_interactivMode)
             {
-                context.Done(_foundResult);
+                base.WaitOrExit(context);
             }
             else
             {
-                base.WaitOrExit(context);
+                // Exit and return found result.
+                context.Done(_foundResult);
             }
         }
 
         public override async Task NoMatchHandler(IDialogContext context, string originalQueryText)
         {
-            _foundResult = false;
-            await context.PostAsync($"Sorry, I couldn't find an answer for '{originalQueryText}'." +
-                "\r\n\r\nYou can try another question, or type 'exit' to return to the main menu.");
+            _foundResult = null;
+
+			if (_interactivMode)
+			{
+				await context.PostAsync($"Sorry, I couldn't find an answer for '{originalQueryText}'." +
+					"\r\n\r\nYou can try another question, or type 'exit' to return to the main menu.");
+			}
         }
 
-        [QnAMakerResponseHandler(100)]
+        [QnAMakerResponseHandler(90)]
         public async Task HiScoreHandler(IDialogContext context, string originalQueryText, QnAMakerResult result)
         {
-            _foundResult = true;
-            await context.PostAsync($"{result.Answer}.");
+            _foundResult = result.Answer;
+
+			if (_interactivMode)
+			{
+				await context.PostAsync($"{result.Answer}.");
+			}
         }
 
-        [QnAMakerResponseHandler(75)]
+        [QnAMakerResponseHandler(70)]
         public async Task PrettyHighScoreHandler(IDialogContext context, string originalQueryText, QnAMakerResult result)
         {
-            _foundResult = true;
-            await context.PostAsync($"This seems to be what you are after.");
-            await context.PostAsync($"{result.Answer}.");
+            _foundResult = result.Answer;
+
+			if (_interactivMode)
+			{
+				await context.PostAsync($"This seems to be what you are after: {result.Answer}.");
+			}
         }
 
         [QnAMakerResponseHandler(50)]
         public async Task LowScoreHandler(IDialogContext context, string originalQueryText, QnAMakerResult result)
         {
-            _foundResult = true;
-            await context.PostAsync($"I'm not exactly sure, but this might help.");
-            await context.PostAsync($"{result.Answer}.");
+            _foundResult = result.Answer;
+
+			if (_interactivMode)
+			{
+				await context.PostAsync($"I'm not exactly sure, but this might help: {result.Answer}.");
+			}
         }
     }
 }

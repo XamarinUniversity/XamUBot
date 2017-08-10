@@ -47,6 +47,8 @@ namespace XamUBot
                 }
             }
 
+			// Setup the first dialog. Note: the delegate will only be executed if the dialog stack is empty! This means after the first request
+			// or after a IDialogStack.Reset() call a new instance will be generated but not if we are popping a dialog of the stack and return to RootDialog.
             await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
 
             return Ok();
