@@ -72,6 +72,11 @@ namespace XamUBot.Dialogs
 				case LuisConstants.Intent_GetSpecialist:
 					// The intent contains the technology the user is looking for.
 					var technologyEntity = result.GetBestMatchingEntity(LuisConstants.Entity_Technology);
+					if(technologyEntity == null)
+					{
+						await context.PostAsync("You seem to be looking for a specialist for some techonology but unfortunately I don't know an answer.");
+						return;
+					}
 
 					await context.PostAsync($"Let me find some team members who know about '{technologyEntity.Name}'");
 
@@ -82,8 +87,13 @@ namespace XamUBot.Dialogs
 					break;
 
 				case LuisConstants.Intent_ShowTeamMember:
-					// The intent contains the technology the user is looking for.
+					// The intent contains the person the user is looking for.
 					var personEntity = result.GetBestMatchingEntity(LuisConstants.Entity_Trainer);
+					if (personEntity == null)
+					{
+						await context.PostAsync("You seem to be looking for a person but unfortunately I don't know an answer.");
+						return;
+					}
 
 					await context.PostAsync($"I'm looking for team members named '{personEntity.Name}'");
 
