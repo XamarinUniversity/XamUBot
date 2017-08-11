@@ -165,6 +165,8 @@
     <Compile Include="Dialogs\Features\QandADialog.cs" />
     <Compile Include="Dialogs\Features\TeamDialog.cs" />
     <Compile Include="Dialogs\Features\RootDialog.cs" />
+    <Compile Include="Dialogs\TargetDialog.cs" />
+    <Compile Include="Dialogs\SourceDialog.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
