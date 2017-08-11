@@ -4,6 +4,7 @@ RootPrompt|Here are some things I can help you out with.
 RootPrompt|What interests you?
 RootPrompt|What takes your fancy?
 RootPrompt|What would you like to find out about?
+PickOneOfTheseTopics|Please pick one of the available choices.
 Hello|G'day
 Hello|Hi
 Hello|Hello

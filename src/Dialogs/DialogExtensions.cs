@@ -24,7 +24,8 @@ namespace XamUBot.Dialogs
 		{
 			try
 			{
-				return (T) await awaitable;
+				var result = await awaitable;
+				return (T) result;
 			}
 			catch (TooManyAttemptsException)
 			{

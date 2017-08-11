@@ -1,11 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.15
+VisualStudioVersion = 15.0.26730.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamUBot", "XamUBot.csproj", "{D3EF79F4-B919-4EBC-9363-A51A83C6D537}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamUApi", "XamUApi\XamUApi.csproj", "{9215677A-832D-4097-BF1C-5D1124DC4DF0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{9A9C250E-738E-4F01-8D29-34FFD8A6D45E}"
+	ProjectSection(SolutionItems) = preProject
+		ngrok.exe = ngrok.exe
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +29,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B932C94-C81D-46A2-8E67-B957D31BAE10}
 	EndGlobalSection
 EndGlobal

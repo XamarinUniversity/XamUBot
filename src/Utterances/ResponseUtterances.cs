@@ -8,7 +8,7 @@ namespace XamUBot
     {
         public enum ReplyTypes
         {
-            Welcome,
+            PickOneOfTheseTopics,
             Hello,
             Swear,
             Repeat,

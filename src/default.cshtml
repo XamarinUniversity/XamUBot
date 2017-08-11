@@ -1,0 +1,91 @@
+﻿@using System.Configuration;
+
+@{
+    Layout = null;
+    var directLineSecret = ConfigurationManager.AppSettings["DirectLineSecret"];
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://unpkg.com/botframework-webchat/botchat.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="bot" />
+    <script src="https://unpkg.com/botframework-webchat/botchat.js"></script>
+    <script>
+        // TODO: Change props to info about current user.
+        const user = {
+            id: 'userid',
+            name: 'username'
+        };
+
+        // TODO: Change props of bot if required.
+        const bot = {
+            id: 'botid',
+            name: 'botname'
+        };
+
+        // Enable debugging.
+        window['botchatDebug'] = 'true';
+
+        const botConnection = new BotChat.DirectLine({
+            // We don't use an alternat DirectLine domain but the standard one.
+            // domain: null,
+
+            // The secret that must be used here is the "direct line secret key" from https://dev.botframework.com
+            secret: '@directLineSecret',
+
+            // TODO: We don't use a token but should maybe instead of exposing the secret...
+            //token: null,
+
+            // Defaults to TRUE but keep it here to remember the option.
+            webSocket: 'true'
+        });
+
+        BotChat.App({
+            bot: bot,
+            botConnection: botConnection,
+            user: user,
+            resize: 'detect'
+        }, document.getElementById('bot'));
+
+        // Example of subscribing to events.
+        /*
+        botConnection.activity$
+            .filter(function (activity) {
+                return activity.type === 'event' && activity.name === 'changeBackground';
+            })
+            .subscribe(function (activity) {
+                console.log('"changeBackground" received with value: ' + activity.value);
+                changeBackgroundColor(activity.value);
+            });
+        function changeBackgroundColor(newColor) {
+            document.body.style.backgroundColor = newColor;
+        }
+        function postButtonMessage() {
+            botConnection
+                .postActivity({
+                    from: { id: 'me' },
+                    name: 'buttonClicked',
+                    type: 'event',
+                    value: ''
+                })
+                .subscribe(function (id) {
+                    console.log('"buttonClicked" sent');
+                });
+        };
+        */
+
+        // Send an initial message to the bot so the server can reply with the welcome message.
+        botConnection.postActivity({
+            from: user,
+            type: 'event',
+            value: 'INIT_DIALOG'
+        })
+        .subscribe(function (id) {
+            console.log('trigger sent');
+        });
+    </script>
+</body>
+</html>

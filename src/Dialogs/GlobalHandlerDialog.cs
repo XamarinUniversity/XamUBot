@@ -110,10 +110,8 @@ namespace XamUBot.Dialogs
             {
                 case Keywords.Exit:
 					// React to exit request. Brings us back to the root dialog.
-					// Note: Reset() clears the stack and will make the message controller create a new instance of the RootDialog().
-					//       This means all state of the dialog will be lost.
-					_task.Reset();
-                    break;
+					await RootDialog.ForwardToRootDialogAsync(_task, clearStack: true);
+					break;
 
                 case Keywords.Repeat:
                     {

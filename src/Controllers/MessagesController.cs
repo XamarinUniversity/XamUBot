@@ -6,11 +6,14 @@ using System.Linq;
 
 namespace XamUBot
 {
-    [BotAuthentication]
+	/// <summary>
+	/// This controller handles all incoming messages the bot can process.
+	/// </summary>
+	[BotAuthentication]
     [RoutePrefix("api/messages")]
     public class MessagesController : ApiController
     {
-        /// <summary>
+	    /// <summary>
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
         /// </summary>
@@ -34,22 +37,27 @@ namespace XamUBot
             //    await connector.Conversations.ReplyToActivityAsync(isTypingReply);
             //}
 
-            if(activity.Type == ActivityTypes.ConversationUpdate)
-            {
-                IConversationUpdateActivity update = activity;
+            //if(activity.Type == ActivityTypes.ConversationUpdate)
+            //{
+            //    IConversationUpdateActivity update = activity;
                 
-                // Remove bot from the members added
-                update.MembersAdded = update.MembersAdded.Where(member => member.Id != update.Recipient.Id).ToList();
+            //    // Remove bot from the members added
+            //    update.MembersAdded = update.MembersAdded.Where(member => member.Id != update.Recipient.Id).ToList();
 
-                if (update.MembersAdded.Count == 0)
-                {
-                    return Ok();
-                }
-            }
+            //    if (update.MembersAdded.Count == 0)
+            //    {
+            //        return Ok();
+            //    }
+            //}
 
-			// Setup the first dialog. Note: the delegate will only be executed if the dialog stack is empty! This means after the first request
-			// or after a IDialogStack.Reset() call a new instance will be generated but not if we are popping a dialog of the stack and return to RootDialog.
-            await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+
+			if (activity.Type == ActivityTypes.Message
+				|| activity.Type == ActivityTypes.Event)
+			{
+				// Setup the first dialog. Note: the delegate will only be executed if the dialog stack is empty! This means after the first request
+				// or after a IDialogStack.Reset() call a new instance will be generated but not if we are popping a dialog of the stack and return to RootDialog.
+				await Conversation.SendAsync(activity, () => new Dialogs.RootDialog());
+			}
 
             return Ok();
         }
