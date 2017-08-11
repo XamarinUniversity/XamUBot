@@ -41,9 +41,9 @@ namespace XamUBot.Dialogs
         }
 
         public FuzzyPromptDialog(IEnumerable<T> displayOptions, IEnumerable<T> validOptions,
-            string prompt, string retry, int attempts, 
+            string prompt, string retry, string tooManyAttempts, int attempts, 
             PromptStyle promptStyle = PromptStyle.Auto)
-            : this(new FuzzyPromptOptions<T>(prompt, retry, 
+            : this(new FuzzyPromptOptions<T>(prompt, retry, tooManyAttempts,
                     options: displayOptions.ToList(), 
                     attempts: attempts, 
                     validOptions: validOptions.ToList(),
@@ -53,11 +53,11 @@ namespace XamUBot.Dialogs
 
         public static void Choice(IDialogContext context, ResumeAfter<T> resume, 
             IEnumerable<T> options, IEnumerable<T> validOptions,
-            string prompt, string retry = null, 
+            string prompt, string retry = null, string tooManyAttempts = null, 
             int attempts = 3, PromptStyle promptStyle = PromptStyle.Auto)
         {
             Choice(context, resume, new FuzzyPromptOptions<T>(
-                prompt, retry, 
+                prompt, retry, tooManyAttempts,
                 attempts: attempts, options: options.ToList(), 
                 validOptions: validOptions.ToList(),
                 promptStyler: new PromptStyler(promptStyle)));
