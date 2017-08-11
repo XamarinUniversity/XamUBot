@@ -100,9 +100,7 @@ namespace XamUBot.Dialogs
 					var dialog = Activator.CreateInstance(dialogType) as IDialog<object>;
 					if (dialog != null)
 					{
-						// Move to the next dialog in the chain. Don't use Forward() here. Haven't quite understood the difference but Forward()
-						// does not work as expected and seems to get back to the RootDialog immediately.
-						context.Call(dialog, OnResumeDialog);
+						await context.Forward(dialog, OnResumeDialog, null, CancellationToken.None);
 						return;
 					}
 				}
@@ -121,6 +119,11 @@ namespace XamUBot.Dialogs
 			ShowMainTopics(context);
 		}
 
+		/// <summary>
+		/// Helper to quickly go to root dialog and optionally reset the dialog stack.
+		/// </summary>
+		/// <param name="dialogTask">context/stack</param>
+		/// <param name="clearStack">TRUE to clear stack, FALSE to leave it unchanged</param>
 		internal async static Task ForwardToRootDialogAsync(IDialogTask dialogTask, bool clearStack)
 		{
 			if (clearStack)
