@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.0
+VisualStudioVersion = 15.0.26815.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamUBot", "XamUBot.csproj", "{D3EF79F4-B919-4EBC-9363-A51A83C6D537}"
 EndProject
@@ -9,7 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamUApi", "XamUApi\XamUApi.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{9A9C250E-738E-4F01-8D29-34FFD8A6D45E}"
 	ProjectSection(SolutionItems) = preProject
+		Debugging BotFramework locally using ngrok {% Robin Osborne.pdf = Debugging BotFramework locally using ngrok {% Robin Osborne.pdf
 		ngrok.exe = ngrok.exe
+		start_ngrok.bat = start_ngrok.bat
 	EndProjectSection
 EndProject
 Global

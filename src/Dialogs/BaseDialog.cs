@@ -140,8 +140,20 @@ namespace XamUBot.Dialogs
                 CreateDefaultPromptOptions(NotUnderstood_PickerTitle, 
                         1, NotUnderstood_PickerOption_BackToMain, 
                         NotUnderstood_PickerOption_KeepTrying));
-
         }
+
+		/// <summary>
+		/// Helper to show a simple picker with two choices.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="resume"></param>
+		/// <param name="message"></param>
+		/// <param name="yes"></param>
+		/// <param name="no"></param>
+		protected void ShowYesNoPicker(IDialogContext context, ResumeAfter<string> resume, string message, string yes = ChoiceYes, string no = ChoiceNo)
+		{
+			PromptDialog.Choice(context, resume, CreateDefaultPromptOptions(message, 2, yes, no));
+		}
 
         async Task OnNotUnderstoodSelected(IDialogContext context, IAwaitable<object> result)
         {
