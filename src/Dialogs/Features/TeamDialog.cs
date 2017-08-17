@@ -120,7 +120,6 @@ namespace XamUBot.Dialogs
 
 			await context.PostAsync(reply);
 
-			_askedIfLookingForAnythingElse = true;
 			ShowYesNoPicker(context, OnAfterAnythingElse, "Anything else you'd like to know about the team?");
 		}
 
