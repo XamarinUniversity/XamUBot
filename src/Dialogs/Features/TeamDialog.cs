@@ -32,26 +32,10 @@ namespace XamUBot.Dialogs
 			WaitForNextMessage(context);
 		}
 
-		bool _askedIfLookingForAnythingElse;
-
 		protected async override Task OnMessageReceivedAsync(IDialogContext context, Activity activity)
 		{
 			var result = await LuisHelper.PredictLuisAsync(activity.Text, LuisConstants.IntentPrefix_Team);
-
-			// Check if the last output was about asking the user if there's anything else.
-			//TODO: This might be a  candidate for the "BestMatchDialog" (https://github.com/garypretty/botframework/tree/master/BestMatchDialog)
-			if (_askedIfLookingForAnythingElse)
-			{
-				_askedIfLookingForAnythingElse = false;
-				if (activity.Text.Trim().ToLowerInvariant() == "no"
-					|| activity.Text.Trim().ToLowerInvariant() == "done"
-					|| activity.Text.Trim().ToLowerInvariant() == "nope")
-				{
-					PopDialog(context);
-					return;
-				}
-			}
-
+			
 			if (result?.TopScoringIntent == null)
 			{
 				// Check Q&A if we don't have an answer from LUIS. This will forward to the Q&A dialog and make it
@@ -136,11 +120,20 @@ namespace XamUBot.Dialogs
 
 			await context.PostAsync(reply);
 
-			_askedIfLookingForAnythingElse = true;
-			await context.PostAsync("Anything else you'd like to know about the team?");
+			ShowYesNoPicker(context, OnAfterAnythingElse, "Anything else you'd like to know about the team?");
+		}
 
-
-			WaitForNextMessage(context);
+		async Task OnAfterAnythingElse(IDialogContext context, IAwaitable<string> result)
+		{
+			var answer = await result.GetValueAsync<string>();
+			if(answer == BaseDialog.ChoiceYes)
+			{
+				await context.PostAsync("Ok - what else would you like to know about the team?");
+			}
+			else
+			{
+				PopDialog(context);
+			}
 		}
 	}
 }
