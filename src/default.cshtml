@@ -44,10 +44,18 @@
         });
 
         BotChat.App({
+            botConnection:
+            {
+                ...botConnection,
+                postActivity: activity => {
+                    //console.log("posting " + activity.channelData);
+                    activity.channelData.MyKey = "MyValue";
+                    return botConnection.postActivity(activity)
+                }
+            },
             bot: bot,
-            botConnection: botConnection,
             user: user,
-            resize: 'detect'
+            resize: 'detect',
         }, document.getElementById('bot'));
 
         // Example of subscribing to events.
