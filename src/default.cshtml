@@ -4,14 +4,38 @@
     Layout = null;
     var directLineSecret = ConfigurationManager.AppSettings["DirectLineSecret"];
 }
-
 <!DOCTYPE html>
 <html>
 <head>
     <link href="https://unpkg.com/botframework-webchat/botchat.css" rel="stylesheet" />
+
+    <style>
+        .example {
+            float: left;
+            margin-right: 20px;
+            width: 300px;
+        }
+
+            .example > h2 {
+                font-family: 'Segoe UI';
+            }
+
+        #bot {
+            border: 1px solid #333;
+            float: left;
+            height: 600px;
+            position: relative;
+            width: 768px;
+        }
+    </style>
 </head>
 <body>
-    <div id="bot" />
+    
+    <p>
+        <div style="top:100px;height:500px">
+            <div id="bot" />
+        </div>
+    </p>
     <script src="https://unpkg.com/botframework-webchat/botchat.js"></script>
     <script>
         // TODO: Change props to info about current user.
@@ -40,7 +64,8 @@
             //token: null,
 
             // Defaults to TRUE but keep it here to remember the option.
-            webSocket: 'true'
+            webSocket: 'true',
+            resize:'detect'
         });
 
         BotChat.App({
