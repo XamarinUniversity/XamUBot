@@ -2,7 +2,8 @@
 
 @{
     Layout = null;
-    var directLineSecret = ConfigurationManager.AppSettings["DirectLineSecret"];
+    var directLineSecret = ConfigurationManager.AppSettings["BotDirectLineSecret"];
+    var userToken = ViewBag.Token;
 }
 <!DOCTYPE html>
 <html>
@@ -114,7 +115,8 @@
         botConnection.postActivity({
             from: user,
             type: 'event',
-            value: 'INIT_DIALOG'
+            value: 'INIT_DIALOG',
+            channelData: { xamuToken : '@userToken' }
         })
         .subscribe(function (id) {
             console.log('trigger sent');

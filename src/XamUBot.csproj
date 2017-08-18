@@ -186,7 +186,6 @@
     <None Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
-    <Content Include="default.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="XamUApi\XamUApi.csproj">
